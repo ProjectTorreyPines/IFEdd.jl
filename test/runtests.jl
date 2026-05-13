@@ -104,6 +104,45 @@ using FUSE
         @test par_blanket isa FUSE.ParametersActor{Float64}
     end
 
+    @testset "IFEParametersInits — standard + IFE groups" begin
+        ini = IFEdd.IFEParametersInits()
+        @test ini isa FUSE.ParametersAllInits{Float64}
+        # Standard groups mirrored from FUSE.ParametersInits
+        @test ini.general isa FUSE.FUSEparameters__general{Float64}
+        @test ini.equilibrium isa FUSE.FUSEparameters__equilibrium{Float64}
+        @test ini.core_profiles isa FUSE.FUSEparameters__core_profiles{Float64}
+        @test ini.requirements isa FUSE.FUSEparameters__requirements{Float64}
+        # IFE-specific groups
+        @test ini.ife_pellet isa IFEdd.FUSEparameters__ife_pellet{Float64}
+        @test ini.ife_driver isa IFEdd.FUSEparameters__ife_driver{Float64}
+        # Default values from joey port
+        @test ini.ife_pellet.fuel_radius == 100e-6
+        @test ini.ife_driver.energy == 1.8e6
+    end
+
+    @testset "IFEParametersActors — @insert_subtype_members enumerates IFE actors" begin
+        act = IFEdd.IFEParametersActors()
+        @test act isa FUSE.ParametersAllActors{Float64}
+        # Standard FUSE actors must be enumerated
+        @test hasproperty(act, :ActorPowerNeeds)
+        @test act.ActorPowerNeeds isa FUSE.ParametersActor
+        # IFE-specific actors must be enumerated (defined before this container)
+        @test hasproperty(act, :ActorIFEAblation)
+        @test hasproperty(act, :ActorIFEBlanket)
+        @test act.ActorIFEBlanket isa IFEdd.FUSEparameters__ActorIFEBlanket{Float64}
+    end
+
+    @testset "ActorPowerNeeds accepts dd_ife (Phase 3b)" begin
+        d = IFEdd.dd_ife()
+        act = IFEdd.IFEParametersActors()
+        # Method dispatch must resolve — actual call needs populated dd, but
+        # `which` is enough to verify signature relaxation took effect.
+        @test which(FUSE.ActorPowerNeeds, (typeof(d), typeof(act))) isa Method
+        # :IFE option must be assignable on the model Switch (post-relaxation)
+        act.ActorPowerNeeds.model = :IFE
+        @test act.ActorPowerNeeds.model == :IFE
+    end
+
     @testset "IMAS function dispatch on dd_ife (Phase 2 signature relaxation)" begin
         d = IFEdd.dd_ife()
         # fusion_power / fusion_neutron_power / fusion_energy must accept dd_ife

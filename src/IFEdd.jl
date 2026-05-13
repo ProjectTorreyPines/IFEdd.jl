@@ -18,14 +18,17 @@ Provides:
 
 Schema source of truth: `data_dictionary/data_structures_extra/*.json`.
 
-File layout:
-1. `dd_ife_idstypes.jl`     — AUTO-GENERATED leaf IDS struct definitions.
-2. `dd_ife.jl`              — AUTO-GENERATED top-level container + `__init__()`
-                              registering every `_all_info` entry.
-3. `actors_fuse_ife.jl`     — IFE actor `ActorIFEAblation` (extends `FUSE._step`).
-4. `actor_ife_blanket.jl`   — IFE blanket actor (two-container: IMAS.dd + dd_ife).
-5. `extract_ife.jl`         — IFE scalar extract functions (`ife_duty_cycle`, …).
-6. `imas_ife.jl`            — placeholder for IMAS extension cross-references.
+File layout (include order matters):
+1. `dd_ife_idstypes.jl`        — AUTO-GENERATED leaf IDS struct definitions.
+2. `dd_ife.jl`                 — AUTO-GENERATED top-level container.
+3. `parameters_ife.jl`         — IFE init parameter structs (ife_pellet, ife_driver).
+4. `parameters_inits_ife.jl`   — IFEParametersInits container.
+5. IFE actor files             — every `FUSE.ParametersActor` subtype must be
+                                 defined BEFORE `parameters_actors_ife.jl` so
+                                 `@insert_subtype_members` picks them up.
+6. `parameters_actors_ife.jl`  — IFEParametersActors container (after IFE actors).
+7. `extract_ife.jl`            — IFE scalar extract functions.
+8. `imas_ife.jl`               — placeholder.
 
 Optional Plots integration lives in `ext/IFEddPlotsExt.jl` and activates
 automatically when both IFEdd and Plots are loaded (weakdep extension).
@@ -45,13 +48,29 @@ using FUSE
 include("dd_ife_idstypes.jl")
 include("dd_ife.jl")
 
-# IFE-specific methods on FUSE / IMAS generic functions.
+# IFE-specific init parameter groups (must precede IFE actor files so any
+# init reference is resolvable, and precede parameters_inits_ife.jl).
+include("parameters_ife.jl")
+
+# IFEdd container for FUSE.ParametersAllInits — mirrors FUSE.ParametersInits
+# field set plus the two IFE init groups defined above.
+include("parameters_inits_ife.jl")
+
+# IFE actors (each defines a FUSE.ParametersActor subtype).
 include("actors_fuse_ife.jl")
 include("actor_ife_blanket.jl")
+
+# IFEdd container for FUSE.ParametersAllActors — must follow all IFE actor
+# files so `@insert_subtype_members FUSE.ParametersActor` enumerates them.
+include("parameters_actors_ife.jl")
+
+# Extract + IMAS placeholder.
 include("extract_ife.jl")
 include("imas_ife.jl")
 
 export dd_ife, ife_summary, ife_build, ife_driver
+export FUSEparameters__ife_pellet, FUSEparameters__ife_driver
+export IFEParametersInits, IFEParametersActors
 export ActorIFEAblation, FUSEparameters__ActorIFEAblation
 export ActorIFEBlanket, FUSEparameters__ActorIFEBlanket
 export ife_duty_cycle, extract_ife
