@@ -165,4 +165,57 @@ using FUSE
         @test isnan(out[:duty_cycle])  # empty driver
     end
 
+    @testset "End-to-end IFE workflow" begin
+        # 1. case_parameters returns IFE-flavored ini/act
+        ini, act = FUSE.case_parameters(:IFE)
+        @test ini isa IFEdd.IFEParametersInits
+        @test act isa IFEdd.IFEParametersActors
+        @test act.ActorPowerNeeds.model == :IFE
+        @test ini.ife_driver.energy == 1.8e6
+
+        # 2. init_ife! populates dd_ife
+        dd = IFEdd.dd_ife()
+        IFEdd.init_ife!(dd, ini, act)
+        @test length(dd.ife_build.layer) == 5
+        @test length(dd.ife_driver.beam) == 1
+        @test !isempty(dd.pellets.launcher)
+        @test !isempty(dd.core_profiles.profiles_1d)
+        @test !isempty(dd.core_sources.source)
+        @test dd.requirements.tritium_breeding_ratio == 1.05
+
+        # 3. IFE-only electricity dispatch works
+        P_wallplug = FUSE.electricity(dd.ife_driver)
+        @test P_wallplug > 0.0
+        @test isfinite(P_wallplug)
+
+        # 4. ife_duty_cycle returns a valid fraction
+        @test 0.0 < IFEdd.ife_duty_cycle(dd) < 1.0
+
+        # 5. ActorIFETransport runs (0-D gain model). IFE actors are IFEdd-owned;
+        #    call unqualified via `using IFEdd` export.
+        IFEdd.ActorIFETransport(dd, act)
+        @test length(dd.core_profiles.time) >= length(dd.ife_driver.time)
+        cp1d_peak = dd.core_profiles.profiles_1d[dd.global_time]
+        @test maximum(cp1d_peak.electrons.temperature) > ini.ife_pellet.Te_core
+
+        # 6. ActorIFEBlanket runs (TBR optimization)
+        IFEdd.ActorIFEBlanket(dd, act)
+        @test !isempty(dd.blanket.module)
+        @test !IMASdd.ismissing(dd.blanket.module[1].time_slice[1], :tritium_breeding_ratio)
+        @test !isempty(dd.neutronics.first_wall.r)
+
+        # 7. ActorPowerNeeds with :IFE branch — FUSE-owned actor, IFEdd registers
+        #    _step_power_needs_ife! method that fires when model == :IFE.
+        FUSE.ActorPowerNeeds(dd, act)
+        bop_systems = dd.balance_of_plant.power_electric_plant_operation.system
+        @test !isempty(bop_systems)
+        hcd_idx = findfirst(s -> s.name == "HCD", bop_systems)
+        @test hcd_idx !== nothing
+
+        # 8. ActorCostingIFE runs
+        IFEdd.ActorCostingIFE(dd, act)
+        @test dd.costing.cost_lifetime > 0.0
+        @test dd.costing.levelized_CoE > 0.0
+    end
+
 end

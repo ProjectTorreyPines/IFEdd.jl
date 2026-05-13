@@ -43,6 +43,8 @@ module IFEdd
 using IMASdd
 using IMAS
 using FUSE
+using FUSE: ±
+using Printf: @sprintf
 
 # Order matters: dd_ife (container) references leaf types as field types.
 include("dd_ife_idstypes.jl")
@@ -59,6 +61,10 @@ include("parameters_inits_ife.jl")
 # IFE actors (each defines a FUSE.ParametersActor subtype).
 include("actors_fuse_ife.jl")
 include("actor_ife_blanket.jl")
+include("actor_ife_transport.jl")
+include("actor_costing_ife.jl")
+include("power_needs_ife.jl")
+include("case_ife.jl")
 
 # IFEdd container for FUSE.ParametersAllActors — must follow all IFE actor
 # files so `@insert_subtype_members FUSE.ParametersActor` enumerates them.
@@ -73,6 +79,9 @@ export FUSEparameters__ife_pellet, FUSEparameters__ife_driver
 export IFEParametersInits, IFEParametersActors
 export ActorIFEAblation, FUSEparameters__ActorIFEAblation
 export ActorIFEBlanket, FUSEparameters__ActorIFEBlanket
+export ActorIFETransport, FUSEparameters__ActorIFETransport
+export ActorCostingIFE, FUSEparameters__ActorCostingIFE
+export init_ife!
 export ife_duty_cycle, extract_ife
 
 end # module
