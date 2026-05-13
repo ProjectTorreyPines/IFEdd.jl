@@ -104,6 +104,19 @@ using FUSE
         @test par_blanket isa FUSE.ParametersActor{Float64}
     end
 
+    @testset "IMAS function dispatch on dd_ife (Phase 2 signature relaxation)" begin
+        d = IFEdd.dd_ife()
+        # fusion_power / fusion_neutron_power / fusion_energy must accept dd_ife
+        # after IMAS-side signature relaxation (::IMAS.dd → ::IMAS.DD).
+        @test which(IMAS.fusion_power, (typeof(d),)) isa Method
+        @test which(IMAS.fusion_neutron_power, (typeof(d),)) isa Method
+        @test which(IMAS.fusion_energy, (typeof(d),)) isa Method
+
+        # And the standard IMAS.dd dispatch must still work (no regression).
+        std_dd = IMAS.dd()
+        @test which(IMAS.fusion_power, (typeof(std_dd),)) isa Method
+    end
+
     @testset "extract_ife stub — two-container signature" begin
         dd = IMAS.dd()
         ife = IFEdd.dd_ife()
