@@ -1,13 +1,21 @@
 # IFE-specific FUSE.ActorPowerNeeds integration.
 #
-# Two methods extend FUSE's generic functions; both involve an IFEdd-owned
-# type (`ife_driver` or `dd_ife`), so neither is type piracy.
+# Two extensions on FUSE generic functions; both involve at least one
+# IFEdd-owned type, so neither is type piracy:
 #
-# Ported from joey_fork/FUSE.jl/src/actors/balance_plant/power_needs_actor.jl
-# L86-98 (IFE branch) and L136-143 (electricity dispatch).
+#   1. `FUSE.electricity(::ife_driver)` — wall-plug power for the IFE driver.
+#
+#   2. `FUSE.ActorPowerNeeds(dd::dd_ife, act, ...)` — outer constructor that
+#      overrides the standard `ActorPowerNeeds` pipeline for IFE scenarios.
+#      Method specificity dispatches IFEdd's version when `dd` is a `dd_ife`;
+#      standard FUSE method handles all other `IMAS.DD` subtypes.
+#
+# This pattern keeps FUSE proper completely free of IFE references — no
+# `:IFE` Switch option, no hook function, no IFE-specific branch in
+# `FUSE._step(::ActorPowerNeeds)`. All IFE knowledge lives here.
 
 """
-    FUSE.electricity(ife_driver::ife_driver)
+    FUSE.electricity(drv::ife_driver)
 
 Wall-plug electric power of the IFE driver (W).
 `P_wallplug = (Σ_beam energy) / T_rep / η_conversion`.
@@ -22,13 +30,39 @@ function FUSE.electricity(drv::ife_driver)
 end
 
 """
-    FUSE._step_power_needs_ife!(dd::dd_ife)
+    FUSE.ActorPowerNeeds(dd::dd_ife, act::FUSE.ParametersAllActors; kw...)
 
-IFE branch of `FUSE.ActorPowerNeeds._step` (model = :IFE). Activated only
-when the embedded container is a `dd_ife`.
+IFE-flavored outer constructor for `FUSE.ActorPowerNeeds`. Bypasses the
+standard magnetic-confinement HCD enumeration and model-branch logic in
+`FUSE._step(::FUSE.ActorPowerNeeds)` and populates BOP entries appropriate
+for inertial fusion scenarios: driver wall-plug power and tritium handling.
+
+`par.model` is ignored (the standard Switch options don't apply to IFE).
+
+Stores results in `dd.balance_of_plant.power_electric_plant_operation`.
 """
-function FUSE._step_power_needs_ife!(dd::dd_ife)
-    bop_electric = dd.balance_of_plant.power_electric_plant_operation
+function FUSE.ActorPowerNeeds(dd::dd_ife, act::FUSE.ParametersAllActors; kw...)
+    actor = FUSE.ActorPowerNeeds(dd, act.ActorPowerNeeds; kw...)
+    _step_ife_power_needs!(actor)
+    FUSE.finalize(actor)
+    return actor
+end
+
+"""
+    _step_ife_power_needs!(actor::FUSE.ActorPowerNeeds)
+
+IFE replacement for `FUSE._step(::ActorPowerNeeds)`. Internal to IFEdd.
+"""
+function _step_ife_power_needs!(actor::FUSE.ActorPowerNeeds)
+    dd = actor.dd
+    bop = dd.balance_of_plant
+    bop_electric = bop.power_electric_plant_operation
+    empty!(bop_electric)
+    if IMASdd.ismissing(bop, :time)
+        bop.time = [dd.global_time]
+    end
+
+    # IFE driver wall-plug power (HCD subsystem entry)
     if !isempty(dd.ife_driver.beam)
         idx = IMAS.name_2_index(bop_electric.system)[:HCD]
         hcd_sys = resize!(bop_electric.system, "name" => "HCD", "index" => idx)
@@ -37,8 +71,11 @@ function FUSE._step_power_needs_ife!(dd::dd_ife)
         IMAS.@ddtime(sub.power = P_driver)
         IMAS.@ddtime(hcd_sys.power = P_driver)
     end
+
+    # Tritium handling (constant power from FUSE.electricity Symbol dispatch)
     idx = IMAS.name_2_index(bop_electric.system)[:tritium_handling]
     sys = resize!(bop_electric.system, "name" => "tritium_handling", "index" => idx)
     IMAS.@ddtime(sys.power = FUSE.electricity(:tritium_handling))
-    return nothing
+
+    return actor
 end

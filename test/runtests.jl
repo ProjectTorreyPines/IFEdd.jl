@@ -132,15 +132,15 @@ using FUSE
         @test act.ActorIFEBlanket isa IFEdd.FUSEparameters__ActorIFEBlanket{Float64}
     end
 
-    @testset "ActorPowerNeeds accepts dd_ife (Phase 3b)" begin
+    @testset "ActorPowerNeeds — IFE outer constructor dispatch" begin
         d = IFEdd.dd_ife()
         act = IFEdd.IFEParametersActors()
-        # Method dispatch must resolve — actual call needs populated dd, but
-        # `which` is enough to verify signature relaxation took effect.
-        @test which(FUSE.ActorPowerNeeds, (typeof(d), typeof(act))) isa Method
-        # :IFE option must be assignable on the model Switch (post-relaxation)
-        act.ActorPowerNeeds.model = :IFE
-        @test act.ActorPowerNeeds.model == :IFE
+        # IFEdd registers `ActorPowerNeeds(dd::dd_ife, act::ParametersAllActors)`
+        # which should be more specific than FUSE's `(dd::IMAS.DD, act::ParametersAllActors)`.
+        m = which(FUSE.ActorPowerNeeds, (typeof(d), typeof(act)))
+        @test m isa Method
+        # The chosen method must come from IFEdd, not FUSE
+        @test parentmodule(m) === IFEdd
     end
 
     @testset "IMAS function dispatch on dd_ife (Phase 2 signature relaxation)" begin
@@ -170,7 +170,6 @@ using FUSE
         ini, act = FUSE.case_parameters(:IFE)
         @test ini isa IFEdd.IFEParametersInits
         @test act isa IFEdd.IFEParametersActors
-        @test act.ActorPowerNeeds.model == :IFE
         @test ini.ife_driver.energy == 1.8e6
 
         # 2. init_ife! populates dd_ife

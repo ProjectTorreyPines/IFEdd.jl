@@ -54,7 +54,9 @@ function FUSE.case_parameters(
 
     ini.core_profiles.ngrid = ngrid
 
-    act.ActorPowerNeeds.model = :IFE
+    # NOTE: no `act.ActorPowerNeeds.model = :IFE` — FUSE has no such option.
+    # IFE handling is selected by method dispatch: `FUSE.ActorPowerNeeds(dd::dd_ife, act)`
+    # in IFEdd's `power_needs_ife.jl` overrides the standard pipeline.
 
     return ini, act
 end
