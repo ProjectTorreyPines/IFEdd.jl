@@ -20,4 +20,5 @@ Manifest.toml
 
 # Internal docs / work artifacts
 claudedocs/
+comparison/
 coverage/

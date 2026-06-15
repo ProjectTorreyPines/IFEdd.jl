@@ -19,7 +19,7 @@ package load time.
   only when those packages are imported by the user.
 - **Build-time codegen**: `scripts/generate.jl` reads the IFE schema JSON files
   in `data_dictionary/data_structures_extra/` and produces
-  `src/dd_ife_generated.jl`. Reuses IMASdd's installed `data_structures/` and
+  `src/dd_idstypes.jl` + `src/dd.jl`. Reuses IMASdd's installed `data_structures/` and
   `cocos_signals.jl` via `pkgdir(IMASdd)`, so nothing from IMASdd is duplicated
   in this repo.
 
@@ -32,7 +32,8 @@ For the full architectural rationale see
 IFEdd/
 ├── src/
 │   ├── IFEdd.jl                       # main module
-│   └── dd_ife_generated.jl            # AUTO-GENERATED (do not edit)
+│   ├── dd_idstypes.jl                 # AUTO-GENERATED leaf IDS types
+│   └── dd.jl                          # AUTO-GENERATED top-level container
 ├── ext/
 │   ├── IFEddFUSEExt.jl                # FUSE Actors, loaded when FUSE is used
 │   └── IFEddIMASExt.jl                # IMAS overloads, loaded when IMAS is used
@@ -59,11 +60,11 @@ using Pkg
 Pkg.develop(path="/Users/yoo/.julia/dev/IFEdd")
 using IFEdd, IMASdd
 
-d = IFEdd.dd_ife()                            # top-level container
+d = IFEdd.dd()                                 # top-level container (always qualified — `dd` is NOT exported)
 d isa IMASdd.DD                                # → true (abstract tree)
 
 # Children are IMASdd's machinery sees them via _all_info
-IMASdd._all_info[(IFEdd.dd_ife, :ife_summary)]
+IMASdd._all_info[(IFEdd.dd, :ife_summary)]
 # → IMASdd.Info(String[], "-", "STRUCTURE", "...", true, String[])
 
 IMASdd.isfrozen(d)                             # → false (abstract dispatch)
@@ -91,9 +92,9 @@ The script:
 3. Filters the IDS list to entries starting with `ife_`.
 4. Calls `GenerateDD.imas_julia_struct(...)` to emit raw struct code.
 5. Post-processes the output to qualify identifiers
-   (`Info` → `IMASdd.Info`, etc.) and renames the top-level container
-   `dd` → `dd_ife`.
-6. Writes `src/dd_ife_generated.jl`.
+   (`Info` → `IMASdd.Info`, etc.). The container name `dd` is kept
+   verbatim; consumers always reach it via `IFEdd.dd(...)`.
+6. Writes `src/dd_idstypes.jl` (leaves) + `src/dd.jl` (container).
 
 The temp workdir is removed on exit, so IFEdd's checkout stays clean.
 
@@ -104,9 +105,9 @@ least one type owned by IFEdd:
 
 | Definition                                                | Safe? |
 |-----------------------------------------------------------|-------|
-| `dd_ife{T} <: IMASdd.DD{T}`                               | yes   |
-| `IMASdd._all_info[(dd_ife, :ife_summary)] = ...`          | yes   |
-| `ext: ActorIFEAblation(dd::IFEdd.dd_ife, ...)`            | yes   |
+| `dd{T} <: IMASdd.DD{T}` (lives inside `IFEdd`, not exported) | yes   |
+| `IMASdd._all_info[(IFEdd.dd, :ife_summary)] = ...`        | yes   |
+| `ext: ActorIFEAblation(dd::IFEdd.dd, ...)`                | yes   |
 
 ## Roadmap
 

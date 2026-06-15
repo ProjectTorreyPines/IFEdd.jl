@@ -167,9 +167,9 @@ end
 #  ife_cx (full)  #
 #= ============== =#
 # TODO: port `plot_ife_cx` from joey_fork/IMAS.jl/src/plot.jl L1610.
-# Needs both standard `IMAS.dd` (for `dd.pellets`) and `dd_ife` (for
+# Needs both standard `IMAS.dd` (for `dd.pellets`) and `IFEdd.dd` (for
 # `ife.ife_build`, `ife.ife_driver`). Two-arg recipe dispatch:
-#     @recipe function plot_ife_cx(dd::IMAS.dd, ife::dd_ife; pellet_scale=0.15)
+#     @recipe function plot_ife_cx(dd::IMAS.dd, ife::IFEdd.dd; pellet_scale=0.15)
 # Calling convention: `plot(dd, ife)` — RecipesBase supports tuple-style
 # multi-arg dispatch; verify Plots-side rendering before activating.
 

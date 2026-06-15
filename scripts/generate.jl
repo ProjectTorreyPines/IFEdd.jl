@@ -6,10 +6,10 @@ Generate Julia struct code for IFEdd's IDS schemas from
 `data_dictionary/data_structures_extra/*.json`.
 
 Output is split across two files for navigability:
-- `src/dd_ife_idstypes.jl` — leaf IDS structs (`ife_summary`, `ife_build`,
+- `src/dd_idstypes.jl` — leaf IDS structs (`ife_summary`, `ife_build`,
   `ife_driver` and all their nested sub-IDS), their FilledFields structs,
   and constructors.
-- `src/dd_ife.jl` — the top-level container struct `dd_ife{T} <: IMASdd.DD{T}`,
+- `src/dd.jl` — the top-level container struct `dd{T} <: IMASdd.DD{T}`,
   its FilledFields and constructor, and a single `__init__()` that merges
   every `_all_info` entry (leaves and container alike) into `IMASdd._all_info`.
 
@@ -26,27 +26,28 @@ Design highlights:
   IMASdd module (e.g. `<: IDS{T}`, `Info(...)`, `const _all_info = Dict(...)`).
   We rewrite those references to qualified forms (`<: IMASdd.IDS{T}`,
   `IMASdd.Info(...)`) and wrap the registry block in `__init__()`.
-- **`dd` → `dd_ife` rename**: GenerateDD always names the top-level container
-  `dd`. We rename the standalone token to avoid clashing with `IMASdd.dd`.
+- **Container name `dd`**: GenerateDD emits `dd`; we keep it. Disambiguation
+  from `IMASdd.dd` happens at call sites because `IFEdd` does not export `dd`,
+  so consumers always write the qualified `IFEdd.dd(...)`.
 
-# Composition modes for `dd_ife`
+# Composition modes for `dd`
 
-The user can choose what goes into the top-level `dd_ife` container by editing
+The user can choose what goes into the top-level `dd` container by editing
 the `IDS_PREFIX` and `EXTRA_IDS` constants below.
 
 - **Mode A — Pure IFE (current default)**: `EXTRA_IDS = String[]`.
-  `dd_ife` contains only the `ife_*` IDS as fields. Most modular and lightest
+  `dd` contains only the `ife_*` IDS as fields. Most modular and lightest
   memory footprint. New IDS types are defined locally.
 
 - **Mode B — Tailored subset** (not yet implemented): `EXTRA_IDS = ["amns_data",
-  "build", "summary"]` etc. `dd_ife` would also contain the listed IMASdd IDS
+  "build", "summary"]` etc. `dd` would also contain the listed IMASdd IDS
   as fields, ideally typed as `::IMASdd.amns_data{T}` (reusing IMASdd's
   concrete types rather than regenerating them). Implementing this requires
   additional post-processing to swap field types and constructor calls; for
   now, leave `EXTRA_IDS` empty.
 
 - **Mode C — Manual**: skip generation of the container entirely and hand-write
-  `dd_ife` in `src/dd_ife.jl`. Useful if the container needs custom fields or
+  `dd` in `src/dd.jl`. Useful if the container needs custom fields or
   bespoke construction logic. Not exposed by this script today; remove the
   call to `split_and_write` if pursuing this mode.
 
@@ -65,14 +66,14 @@ const IMASDD_DD = joinpath(IMASDD_ROOT, "data_dictionary")
 
 const IFEDD_ROOT = normpath(joinpath(@__DIR__, ".."))
 const IFEDD_DD = joinpath(IFEDD_ROOT, "data_dictionary")
-const OUT_LEAVES = joinpath(IFEDD_ROOT, "src", "dd_ife_idstypes.jl")
-const OUT_CONTAINER = joinpath(IFEDD_ROOT, "src", "dd_ife.jl")
+const OUT_LEAVES = joinpath(IFEDD_ROOT, "src", "dd_idstypes.jl")
+const OUT_CONTAINER = joinpath(IFEDD_ROOT, "src", "dd.jl")
 
 # Mode A (Pure IFE): prefix-filter for IDS names to emit as new local types.
 const IDS_PREFIX = "ife_"
 
 # Mode B (Tailored subset): IMASdd IDS names listed here are pulled into the
-# `dd_ife` container as `::IMASdd.X{T}` (reusing IMASdd's concrete types
+# `dd` container as `::IMASdd.X{T}` (reusing IMASdd's concrete types
 # instead of regenerating local copies). Post-processing strips the regenerated
 # struct definitions, qualifies the container field/constructor calls, and
 # omits these IDS from the local `_all_info` registration (IMASdd already has
@@ -89,8 +90,10 @@ const EXTRA_IDS = String[
     "summary",            # standard summary IDS
 ]
 
-# Container name. GenerateDD emits `dd`; rename to avoid clashing with `IMASdd.dd`.
-const TOP_NAME = "dd_ife"
+# Container name. GenerateDD emits `dd`; we keep that name so the satellite
+# parallels IMASdd, but `IFEdd` does NOT export `dd` — outside callers must
+# always write `IFEdd.dd(...)` to disambiguate from `IMASdd.dd`.
+const TOP_NAME = "dd"
 
 @info "Paths" IMASDD_DD IFEDD_DD OUT_LEAVES OUT_CONTAINER
 
@@ -187,12 +190,8 @@ function postprocess(content::String)
     # 3) Qualify Info(...) constructor calls
     content = replace(content, r"(?<![A-Za-z_\.])Info\(" => "IMASdd.Info(")
 
-    # 4) Rename top-level container `dd` -> `dd_ife`.
-    #    Word-boundary regex matches the standalone token only.
-    #    `IMASdd.DD` is capital-D so not matched. `FilledFields____dd` is
-    #    handled by an explicit rule below because `_` is a word char.
-    content = replace(content, r"\bdd\b" => TOP_NAME)
-    content = replace(content, "FilledFields____dd" => "FilledFields____$(TOP_NAME)")
+    # 4) Container name `dd` matches GenerateDD's output verbatim — no rename
+    #    needed. (`IMASdd.DD` abstract supertype is already qualified above.)
 
     # 5) Convert `const _all_info = Dict{...}(` and its trailing `)` into
     #    a `__init__()` that `merge!`s into `IMASdd._all_info`.
@@ -273,7 +272,7 @@ end
 """
     qualify_extra_ids_in_container(content::String, extra_ids::Vector{String})
 
-Within the `dd_ife` container struct + constructor, rewrite local references
+Within the `dd` container struct + constructor, rewrite local references
 to extra IDS types so they point at IMASdd's concrete types:
 - field type:      `field::pellets{T}`        → `field::IMASdd.pellets{T}`
 - constructor:     `pellets{T}(; frozen=...)` → `IMASdd.pellets{T}(; frozen=...)`
@@ -369,7 +368,7 @@ function main()
         # DO NOT EDIT MANUALLY. Re-run: `julia scripts/generate.jl`
         #
         # Leaf IDS types only. The top-level `$(TOP_NAME)` container lives in
-        # dd_ife.jl, which is `include`d after this file by IFEdd.jl.
+        # dd.jl, which is `include`d after this file by IFEdd.jl.
         # ─────────────────────────────────────────────────────────────────────────────
         """
         container_header = """
