@@ -3,64 +3,23 @@
     IFEdd/scripts/generate.jl
 
 Generate Julia struct code for IFEdd's IDS schemas from
-`data_dictionary/data_structures_extra/*.json`.
+`data_dictionary/data_structures_extra/*.json` into:
 
-Output is split across two files for navigability:
-- `src/dd_idstypes.jl` — leaf IDS structs (`ife_summary`, `ife_build`,
-  `ife_driver` and all their nested sub-IDS), their FilledFields structs,
-  and constructors.
-- `src/dd.jl` — the top-level container struct `dd{T} <: IMASdd.DD{T}`,
-  its FilledFields and constructor, and a single `__init__()` that merges
-  every `_all_info` entry (leaves and container alike) into `IMASdd._all_info`.
+- `src/dd_idstypes.jl` — leaf IDS structs.
+- `src/dd.jl` — top-level container `dd{T} <: IMASdd.DD{T}` + `__init__()`
+  that merges `_all_info` entries into `IMASdd._all_info`.
 
-Design highlights:
-- **Reuse IMASdd's installed files** via `pkgdir(IMASdd)` instead of copying
-  `cocos_signals.jl` or `data_structures/` into IFEdd. Works for both
-  registered installs and dev checkouts.
-- **Temp workdir + symlinks**: GenerateDD expects a single DDdir, so we
-  virtually merge IMASdd's read-only assets with IFEdd's `data_structures_extra`
-  using symlinks under a `mktempdir`. Cleaned up on exit.
-- **IDS name filter**: only structs whose IDS name starts with `IDS_PREFIX`
-  (default `ife_`) are emitted. See "Mode" notes below for tailoring options.
-- **Post-processing**: GenerateDD emits code assuming it lives inside the
-  IMASdd module (e.g. `<: IDS{T}`, `Info(...)`, `const _all_info = Dict(...)`).
-  We rewrite those references to qualified forms (`<: IMASdd.IDS{T}`,
-  `IMASdd.Info(...)`) and wrap the registry block in `__init__()`.
-- **Container name `dd`**: GenerateDD emits `dd`; we keep it. Disambiguation
-  from `IMASdd.dd` happens at call sites because `IFEdd` does not export `dd`,
-  so consumers always write the qualified `IFEdd.dd(...)`.
+`IDS_PREFIX` selects IFE-owned IDS (defined locally); `EXTRA_IDS` lists
+IMASdd IDS to embed as `::IMASdd.X{T}` (reused, not regenerated). The
+container name `dd` matches IMASdd; disambiguation happens at call sites
+since `IFEdd` does not export it (always `IFEdd.dd(...)`).
 
-# Composition modes for `dd`
-
-The user can choose what goes into the top-level `dd` container by editing
-the `IDS_PREFIX` and `EXTRA_IDS` constants below.
-
-- **Mode A — Pure IFE (current default)**: `EXTRA_IDS = String[]`.
-  `dd` contains only the `ife_*` IDS as fields. Most modular and lightest
-  memory footprint. New IDS types are defined locally.
-
-- **Mode B — Tailored subset** (not yet implemented): `EXTRA_IDS = ["amns_data",
-  "build", "summary"]` etc. `dd` would also contain the listed IMASdd IDS
-  as fields, ideally typed as `::IMASdd.amns_data{T}` (reusing IMASdd's
-  concrete types rather than regenerating them). Implementing this requires
-  additional post-processing to swap field types and constructor calls; for
-  now, leave `EXTRA_IDS` empty.
-
-- **Mode C — Manual**: skip generation of the container entirely and hand-write
-  `dd` in `src/dd.jl`. Useful if the container needs custom fields or
-  bespoke construction logic. Not exposed by this script today; remove the
-  call to `split_and_write` if pursuing this mode.
-
-Run:
-    julia scripts/generate.jl
+Run: `julia scripts/generate.jl`.
 """
 
 using IMASdd
 using GenerateDD: imas_dd_ids_names, imas_dd_ids, imas_julia_struct
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Configuration
-# ──────────────────────────────────────────────────────────────────────────────
 const IMASDD_ROOT = pkgdir(IMASdd)
 const IMASDD_DD = joinpath(IMASDD_ROOT, "data_dictionary")
 
@@ -69,37 +28,27 @@ const IFEDD_DD = joinpath(IFEDD_ROOT, "data_dictionary")
 const OUT_LEAVES = joinpath(IFEDD_ROOT, "src", "dd_idstypes.jl")
 const OUT_CONTAINER = joinpath(IFEDD_ROOT, "src", "dd.jl")
 
-# Mode A (Pure IFE): prefix-filter for IDS names to emit as new local types.
 const IDS_PREFIX = "ife_"
 
-# Mode B (Tailored subset): IMASdd IDS names listed here are pulled into the
-# `dd` container as `::IMASdd.X{T}` (reusing IMASdd's concrete types
-# instead of regenerating local copies). Post-processing strips the regenerated
-# struct definitions, qualifies the container field/constructor calls, and
-# omits these IDS from the local `_all_info` registration (IMASdd already has
-# them). Set to `String[]` for Mode A (pure IFE).
+# IMASdd IDS embedded as `::IMASdd.X{T}` (reused, not regenerated). Their
+# struct defs are stripped and `_all_info` entries are skipped (IMASdd
+# already registers them).
 const EXTRA_IDS = String[
-    "pellets",            # target geometry (init_ife!, ActorIFETransport, ActorCostingIFE)
-    "core_profiles",      # plasma profiles (init_ife!, ActorIFETransport)
-    "core_sources",       # fusion source terms (init_ife!, ActorIFETransport)
-    "blanket",            # TBR + blanket layer results (ActorIFEBlanket)
-    "neutronics",         # first_wall + wall_loading (ActorIFEBlanket)
-    "balance_of_plant",   # thermal/electric power flow (init_balance_of_plant!, ActorCostingIFE)
-    "costing",            # cost structure (ActorCostingIFE)
-    "requirements",       # TBR target, plant_lifetime, availability
-    "summary",            # standard summary IDS
+    "pellets",
+    "core_profiles",
+    "core_sources",
+    "blanket",
+    "neutronics",
+    "balance_of_plant",
+    "costing",
+    "requirements",
+    "summary",
 ]
 
-# Container name. GenerateDD emits `dd`; we keep that name so the satellite
-# parallels IMASdd, but `IFEdd` does NOT export `dd` — outside callers must
-# always write `IFEdd.dd(...)` to disambiguate from `IMASdd.dd`.
 const TOP_NAME = "dd"
 
 @info "Paths" IMASDD_DD IFEDD_DD OUT_LEAVES OUT_CONTAINER
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 1: temp workdir that virtually merges IMASdd + IFEdd files
-# ──────────────────────────────────────────────────────────────────────────────
 function setup_workdir()
     workdir = mktempdir(prefix="ifedd_gen_")
     @info "Created temp workdir" workdir
@@ -131,9 +80,6 @@ function setup_workdir()
     return workdir
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 2: collect field paths for selected IDS
-# ──────────────────────────────────────────────────────────────────────────────
 function collect_target_fields(workdir::String)
     all_ids = imas_dd_ids_names(workdir; extras=true)
     selected = String[]
@@ -152,27 +98,19 @@ function collect_target_fields(workdir::String)
     return desired
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 3: invoke GenerateDD's emitter
-# ──────────────────────────────────────────────────────────────────────────────
 function generate_raw(workdir::String, desired::Vector{String})
     cd(workdir)
     cmds = imas_julia_struct(workdir, desired)
     return join(cmds, "\n")
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 4: rewrite code for use outside the IMASdd module
-# ──────────────────────────────────────────────────────────────────────────────
 """
-GenerateDD emits code that assumes it is being spliced into the IMASdd module
-itself, so identifiers like `IDS`, `Info`, `_all_info` are unqualified. From
-IFEdd we have to qualify them, rename the top-level container, and turn the
-`const _all_info = Dict(...)` block into a `__init__` that merges entries into
-IMASdd's existing dict.
+Qualify IMASdd identifiers (`IDS`, `Info`, `IDSvector`, `ThreadSafeDicts`) and
+turn the `const _all_info = Dict(...)` block into an `__init__()` that
+`merge!`s entries into `IMASdd._all_info`. GenerateDD assumes its output
+lives inside IMASdd; this rewrites it for an external module.
 """
 function postprocess(content::String)
-    # 1) Qualify abstract type references with IMASdd.
     abstract_types = [
         "FilledFields", "IDS", "DD", "IDStop", "IDSraw",
         "IDSvectorElement", "IDSvectorRawElement", "IDSvectorIonElement",
@@ -182,19 +120,10 @@ function postprocess(content::String)
         content = replace(content, Regex("(<:\\s*)$t\\{") => SubstitutionString("\\1IMASdd.$t{"))
         content = replace(content, Regex("(<:\\s*)$t\\b(?!\\.)") => SubstitutionString("\\1IMASdd.$t"))
     end
-
-    # 2) Qualify concrete helper types
     content = replace(content, r"(::|\b)IDSvector\{" => s"\1IMASdd.IDSvector{")
     content = replace(content, r"\bThreadSafeDicts\." => "IMASdd.ThreadSafeDicts.")
-
-    # 3) Qualify Info(...) constructor calls
     content = replace(content, r"(?<![A-Za-z_\.])Info\(" => "IMASdd.Info(")
 
-    # 4) Container name `dd` matches GenerateDD's output verbatim — no rename
-    #    needed. (`IMASdd.DD` abstract supertype is already qualified above.)
-
-    # 5) Convert `const _all_info = Dict{...}(` and its trailing `)` into
-    #    a `__init__()` that `merge!`s into `IMASdd._all_info`.
     open_marker = "const _all_info = Dict{Tuple{<:Type,Symbol},Info}("
     replaced_open = "function __init__()\n    merge!(IMASdd._all_info, Dict("
     if occursin(open_marker, content)
@@ -213,23 +142,7 @@ function postprocess(content::String)
     return content
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 4.5: Mode B subset post-processing
-# ──────────────────────────────────────────────────────────────────────────────
-"""
-    strip_extra_ids_structs(content::String, extra_ids::Vector{String})
-
-Remove `mutable struct`, `FilledFields____`, and constructor `function` blocks
-for any IDS whose root name is in `extra_ids`. Block start patterns recognized:
-- `mutable struct <ids_root>{T<:Real} <: ...`
-- `mutable struct <ids_root>__<...>{T<:Real} <: ...`
-- `mutable struct FilledFields____<ids_root>` (with or without `__<...>`)
-- `function <ids_root>{T}(...)`
-- `function <ids_root>__<...>{T}(...)`
-
-Block end pattern: line that is exactly `end` (column 0). GenerateDD output
-keeps all top-level definitions at indent 0, so this is unambiguous.
-"""
+"""Remove struct/FilledFields/constructor blocks for any IDS rooted in `extra_ids`."""
 function strip_extra_ids_structs(content::String, extra_ids::Vector{String})
     isempty(extra_ids) && return content
 
@@ -269,16 +182,7 @@ function strip_extra_ids_structs(content::String, extra_ids::Vector{String})
     return join(out, '\n')
 end
 
-"""
-    qualify_extra_ids_in_container(content::String, extra_ids::Vector{String})
-
-Within the `dd` container struct + constructor, rewrite local references
-to extra IDS types so they point at IMASdd's concrete types:
-- field type:      `field::pellets{T}`        → `field::IMASdd.pellets{T}`
-- constructor:     `pellets{T}(; frozen=...)` → `IMASdd.pellets{T}(; frozen=...)`
-
-Applied per `extra_ids` name to avoid accidentally rewriting IFE-owned names.
-"""
+"""Qualify `extra_ids` references in the container to `IMASdd.<name>{T}`."""
 function qualify_extra_ids_in_container(content::String, extra_ids::Vector{String})
     for name in extra_ids
         # Field type: `::name{`
@@ -290,14 +194,7 @@ function qualify_extra_ids_in_container(content::String, extra_ids::Vector{Strin
     return content
 end
 
-"""
-    filter_all_info_entries(content::String, extra_ids::Vector{String})
-
-Remove `_all_info` dictionary entries whose key references any IDS rooted at
-an `extra_ids` name (IMASdd already registers these). Entries have the form:
-    (<TypeName>, :field) => IMASdd.Info(...),
-on a single line within the `__init__()` Dict block.
-"""
+"""Drop `_all_info` entries keyed on `extra_ids` types (IMASdd already registers them)."""
 function filter_all_info_entries(content::String, extra_ids::Vector{String})
     isempty(extra_ids) && return content
     lines = split(content, '\n')
@@ -317,9 +214,6 @@ function filter_all_info_entries(content::String, extra_ids::Vector{String})
     return join(out, '\n')
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Step 5: split into two files at the container boundary
-# ──────────────────────────────────────────────────────────────────────────────
 """
 Split the post-processed content into:
 - `leaves`: everything up to the container's FilledFields (leaf IDS types).
@@ -339,9 +233,6 @@ function split_content(content::String)
     return leaves, container
 end
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Main
-# ──────────────────────────────────────────────────────────────────────────────
 function main()
     workdir = setup_workdir()
     try
@@ -351,10 +242,7 @@ function main()
 
         cooked = postprocess(raw)
 
-        # Mode B: strip extra IDS struct definitions (IMASdd has them), qualify
-        # container references to those IDS, and skip their `_all_info` entries.
         if !isempty(EXTRA_IDS)
-            @info "Mode B subset post-processing" EXTRA_IDS
             cooked = strip_extra_ids_structs(cooked, EXTRA_IDS)
             cooked = qualify_extra_ids_in_container(cooked, EXTRA_IDS)
             cooked = filter_all_info_entries(cooked, EXTRA_IDS)
@@ -362,31 +250,16 @@ function main()
 
         leaves, container = split_content(cooked)
 
-        leaves_header = """
-        # ─────────────────────────────────────────────────────────────────────────────
-        # AUTO-GENERATED by scripts/generate.jl from data_structures_extra/*.json
-        # DO NOT EDIT MANUALLY. Re-run: `julia scripts/generate.jl`
-        #
-        # Leaf IDS types only. The top-level `$(TOP_NAME)` container lives in
-        # dd.jl, which is `include`d after this file by IFEdd.jl.
-        # ─────────────────────────────────────────────────────────────────────────────
-        """
-        container_header = """
-        # ─────────────────────────────────────────────────────────────────────────────
-        # AUTO-GENERATED by scripts/generate.jl from data_structures_extra/*.json
-        # DO NOT EDIT MANUALLY. Re-run: `julia scripts/generate.jl`
-        #
-        # Top-level `$(TOP_NAME)` container, its FilledFields struct and
-        # constructor, plus `__init__()` that registers every `_all_info` entry
-        # (leaves and container) into IMASdd's global registry.
-        # ─────────────────────────────────────────────────────────────────────────────
+        auto_gen_banner = """
+        # AUTO-GENERATED by scripts/generate.jl — DO NOT EDIT.
+        # Re-run: `julia scripts/generate.jl`
         """
 
         open(OUT_LEAVES, "w") do io
-            write(io, leaves_header, "\n", leaves, "\n")
+            write(io, auto_gen_banner, "\n", leaves, "\n")
         end
         open(OUT_CONTAINER, "w") do io
-            write(io, container_header, "\n", container)
+            write(io, auto_gen_banner, "\n", container)
         end
         @info "Wrote outputs" OUT_LEAVES OUT_CONTAINER leaves_bytes=filesize(OUT_LEAVES) container_bytes=filesize(OUT_CONTAINER)
     finally

@@ -1,19 +1,5 @@
-# IFE-specific Plots.jl recipes — activated when both IFEdd and Plots are
-# loaded (Julia 1.9+ package extension mechanism).
-#
-# Ported from joey_fork/IMAS.jl/src/plot.jl (lines 1370–1690). Joey's
-# `plot_pellets_launcher(::IMAS.pellets)` recipe is intentionally NOT ported
-# here — it dispatches purely on IMAS-owned types, so it belongs in IMAS.jl
-# itself (porting would be type piracy on `RecipesBase.apply_recipe`).
-#
-# IFE-only recipes (single IFEdd-owned type) are fully active here:
-#   - `ife_build` cross-section / radial bar
-#   - `ife_build__layer` vector (concentric circles)
-#   - `ife_driver` power-flow bar chart
-#
-# Combined-container recipe (`plot_ife_cx`, joey L1610) takes the full IMAS.dd
-# plus IFE container; left as a TODO until the (dd, ife) two-arg dispatch
-# pattern for RecipesBase is verified.
+# Plots.jl recipes for IFE-owned IDS — activates as a package extension when
+# both IFEdd and Plots are loaded.
 
 module IFEddPlotsExt
 
@@ -162,15 +148,5 @@ end
         [P_wall / 1e6, P_launched / 1e6, P_absorbed / 1e6]
     end
 end
-
-#= ============== =#
-#  ife_cx (full)  #
-#= ============== =#
-# TODO: port `plot_ife_cx` from joey_fork/IMAS.jl/src/plot.jl L1610.
-# Needs both standard `IMAS.dd` (for `dd.pellets`) and `IFEdd.dd` (for
-# `ife.ife_build`, `ife.ife_driver`). Two-arg recipe dispatch:
-#     @recipe function plot_ife_cx(dd::IMAS.dd, ife::IFEdd.dd; pellet_scale=0.15)
-# Calling convention: `plot(dd, ife)` — RecipesBase supports tuple-style
-# multi-arg dispatch; verify Plots-side rendering before activating.
 
 end # module
