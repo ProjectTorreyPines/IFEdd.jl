@@ -6,17 +6,17 @@ using IMASdd
 
     @testset "Module loading" begin
         @test isdefined(IFEdd, :dd)
-        @test isdefined(IFEdd, :ife_summary)
-        @test isdefined(IFEdd, :ife_build)
-        @test isdefined(IFEdd, :ife_driver)
+        @test isdefined(IFEdd, :summary)
+        @test isdefined(IFEdd, :build)
+        @test isdefined(IFEdd, :driver)
     end
 
     @testset "Type hierarchy" begin
         @test IFEdd.dd{Float64} <: IMASdd.DD{Float64}
         @test IFEdd.dd{Float64} <: IMASdd.IDS{Float64}
-        @test IFEdd.ife_summary{Float64} <: IMASdd.IDS{Float64}
-        @test IFEdd.ife_build{Float64} <: IMASdd.IDS{Float64}
-        @test IFEdd.ife_driver{Float64} <: IMASdd.IDS{Float64}
+        @test IFEdd.summary{Float64} <: IMASdd.IDS{Float64}
+        @test IFEdd.build{Float64} <: IMASdd.IDS{Float64}
+        @test IFEdd.driver{Float64} <: IMASdd.IDS{Float64}
     end
 
     @testset "Instantiation" begin
@@ -29,9 +29,9 @@ using IMASdd
         @test d32 isa IFEdd.dd{Float32}
 
         # IFE-specific IDS children
-        @test d.ife_summary isa IFEdd.ife_summary{Float64}
-        @test d.ife_build isa IFEdd.ife_build{Float64}
-        @test d.ife_driver isa IFEdd.ife_driver{Float64}
+        @test d.summary isa IFEdd.summary{Float64}
+        @test d.build isa IFEdd.build{Float64}
+        @test d.driver isa IFEdd.driver{Float64}
 
         # Mode B subset: standard IDS reused from IMASdd (not regenerated)
         @test d.pellets isa IMASdd.pellets{Float64}
@@ -42,19 +42,18 @@ using IMASdd
         @test d.balance_of_plant isa IMASdd.balance_of_plant{Float64}
         @test d.costing isa IMASdd.costing{Float64}
         @test d.requirements isa IMASdd.requirements{Float64}
-        @test d.summary isa IMASdd.summary{Float64}
     end
 
     @testset "_all_info registration" begin
         # Top-level container entries
-        @test haskey(IMASdd._all_info, (IFEdd.dd, :ife_summary))
-        @test haskey(IMASdd._all_info, (IFEdd.dd, :ife_build))
-        @test haskey(IMASdd._all_info, (IFEdd.dd, :ife_driver))
+        @test haskey(IMASdd._all_info, (IFEdd.dd, :summary))
+        @test haskey(IMASdd._all_info, (IFEdd.dd, :build))
+        @test haskey(IMASdd._all_info, (IFEdd.dd, :driver))
 
         # A leaf field
-        @test haskey(IMASdd._all_info, (IFEdd.ife_summary, :target))
+        @test haskey(IMASdd._all_info, (IFEdd.summary, :target))
 
-        info = IMASdd._all_info[(IFEdd.dd, :ife_summary)]
+        info = IMASdd._all_info[(IFEdd.dd, :summary)]
         @test info isa IMASdd.Info
         @test info.data_type == "STRUCTURE"
     end
@@ -69,7 +68,7 @@ using IMASdd
         @test IMASdd.isfrozen(df) == true
 
         # parent traversal: a leaf's _parent should point back to dd
-        @test getfield(d.ife_summary, :_parent).value === d
+        @test getfield(d.summary, :_parent).value === d
     end
 
 end

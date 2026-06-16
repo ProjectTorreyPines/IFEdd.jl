@@ -2,7 +2,7 @@
 
 IFE (Inertial Fusion Energy) data dictionary — satellite of [IMASdd](https://github.com/ProjectTorreyPines/IMASdd.jl).
 
-Defines IFE-specific IDS types (`ife_summary`, `ife_build`, `ife_driver`) as
+Defines IFE-specific IDS types (`summary`, `build`, `driver`) as
 subtypes of IMASdd's abstract hierarchy and a container `dd{T} <: IMASdd.DD{T}`
 that embeds the IDS used by IFE workflows. New schema metadata is registered
 into `IMASdd._all_info` at package load via `__init__()`. No IMASdd source is
@@ -37,7 +37,7 @@ using IFEdd, IMASdd
 d = IFEdd.dd()                       # `dd` is NOT exported — always qualify
 d isa IMASdd.DD                      # true
 
-IMASdd._all_info[(IFEdd.dd, :ife_summary)]
+IMASdd._all_info[(IFEdd.dd, :summary)]
 IMASdd.isfrozen(d)                   # false
 ```
 
@@ -67,5 +67,5 @@ Every method dispatches on at least one IFEdd-owned type:
 | Definition | Safe? |
 |---|---|
 | `dd{T} <: IMASdd.DD{T}` (lives inside `IFEdd`, not exported) | yes |
-| `IMASdd._all_info[(IFEdd.dd, :ife_summary)] = ...` | yes |
-| `ext: plot recipe(::ife_build)` | yes |
+| `IMASdd._all_info[(IFEdd.dd, :summary)] = ...` | yes |
+| `ext: plot recipe(::build)` | yes |

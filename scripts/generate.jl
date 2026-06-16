@@ -9,10 +9,11 @@ Generate Julia struct code for IFEdd's IDS schemas from
 - `src/dd.jl` — top-level container `dd{T} <: IMASdd.DD{T}` + `__init__()`
   that merges `_all_info` entries into `IMASdd._all_info`.
 
-`IDS_PREFIX` selects IFE-owned IDS (defined locally); `EXTRA_IDS` lists
-IMASdd IDS to embed as `::IMASdd.X{T}` (reused, not regenerated). The
-container name `dd` matches IMASdd; disambiguation happens at call sites
-since `IFEdd` does not export it (always `IFEdd.dd(...)`).
+`LOCAL_IDS` lists IFE-owned IDS (defined locally; their JSON files override
+IMASdd's same-name files in the workdir). `EXTRA_IDS` lists IMASdd IDS to
+embed as `::IMASdd.X{T}` (reused, not regenerated). The container name `dd`
+matches IMASdd; disambiguation happens at call sites since `IFEdd` does
+not export it (always `IFEdd.dd(...)`).
 
 Run: `julia scripts/generate.jl`.
 """
@@ -28,11 +29,14 @@ const IFEDD_DD = joinpath(IFEDD_ROOT, "data_dictionary")
 const OUT_LEAVES = joinpath(IFEDD_ROOT, "src", "dd_idstypes.jl")
 const OUT_CONTAINER = joinpath(IFEDD_ROOT, "src", "dd.jl")
 
-const IDS_PREFIX = "ife_"
+# IFE-owned IDS, defined locally by IFEdd. Their JSON files in
+# `data_dictionary/data_structures_extra/` override any same-name file in
+# IMASdd (`setup_workdir` enforces single-source so MFE fields don't leak).
+const LOCAL_IDS = String["summary", "build", "driver"]
 
 # IMASdd IDS embedded as `::IMASdd.X{T}` (reused, not regenerated). Their
-# struct defs are stripped and `_all_info` entries are skipped (IMASdd
-# already registers them).
+# struct defs are stripped from generator output and their `_all_info`
+# entries are skipped (IMASdd already registers them).
 const EXTRA_IDS = String[
     "pellets",
     "core_profiles",
@@ -42,7 +46,6 @@ const EXTRA_IDS = String[
     "balance_of_plant",
     "costing",
     "requirements",
-    "summary",
 ]
 
 const TOP_NAME = "dd"
@@ -53,14 +56,31 @@ function setup_workdir()
     workdir = mktempdir(prefix="ifedd_gen_")
     @info "Created temp workdir" workdir
 
-    symlink(joinpath(IMASDD_DD, "data_structures"),
-            joinpath(workdir, "data_structures"))
+    # Names that IFEdd defines locally. GenerateDD merges all matching
+    # `<name>.json` from `data_structures` + `data_structures_extra`, so for
+    # these we must keep ONLY IFEdd's file (else MFE fields leak into the IFE
+    # schema). Excludes them from IMASdd's data_structures symlink set.
+    ifedd_extras_dir = joinpath(IFEDD_DD, "data_structures_extra")
+    ifedd_local_names = Set{String}(
+        replace(f, ".json" => "") for f in readdir(ifedd_extras_dir) if endswith(f, ".json")
+    )
+
+    # data_structures: file-level symlinks, skipping IFEdd-overridden names
+    ds_dst = joinpath(workdir, "data_structures")
+    mkdir(ds_dst)
+    imasdd_ds = joinpath(IMASDD_DD, "data_structures")
+    for f in readdir(imasdd_ds)
+        name = endswith(f, ".json") ? replace(f, ".json" => "") : ""
+        endswith(f, ".json") && name in ifedd_local_names && continue
+        symlink(joinpath(imasdd_ds, f), joinpath(ds_dst, f))
+    end
+
     symlink(joinpath(IMASDD_DD, "cocos_signals.jl"),
             joinpath(workdir, "cocos_signals.jl"))
 
+    # data_structures_extra: IMASdd's first, then IFEdd's (overrides by name)
     extra_dst = joinpath(workdir, "data_structures_extra")
     mkdir(extra_dst)
-    # IMASdd's own extras (build/blanket/neutronics/balance_of_plant/costing/...) come first
     imasdd_extra = joinpath(IMASDD_DD, "data_structures_extra")
     if isdir(imasdd_extra)
         for f in readdir(imasdd_extra)
@@ -68,13 +88,11 @@ function setup_workdir()
             symlink(joinpath(imasdd_extra, f), joinpath(extra_dst, f))
         end
     end
-    # IFEdd's IFE-specific extras (ife_*.json) layered on top — wins on name conflict
-    extra_src = joinpath(IFEDD_DD, "data_structures_extra")
-    for f in readdir(extra_src)
+    for f in readdir(ifedd_extras_dir)
         endswith(f, ".json") || continue
         dst = joinpath(extra_dst, f)
         (isfile(dst) || islink(dst)) && rm(dst)
-        symlink(joinpath(extra_src, f), dst)
+        symlink(joinpath(ifedd_extras_dir, f), dst)
     end
 
     return workdir
@@ -84,7 +102,7 @@ function collect_target_fields(workdir::String)
     all_ids = imas_dd_ids_names(workdir; extras=true)
     selected = String[]
     for name in all_ids
-        if startswith(name, IDS_PREFIX) || name in EXTRA_IDS
+        if name in LOCAL_IDS || name in EXTRA_IDS
             push!(selected, name)
         end
     end

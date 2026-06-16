@@ -3,20 +3,20 @@
 
 module IFEddPlotsExt
 
-using IFEdd: ife_build, ife_driver, ife_build__layer
+using IFEdd: build, driver, build__layer
 using IMAS
 using IMASdd
 using Plots  # provides @recipe, @series (re-exports RecipesBase)
 
 #= ========= =#
-#  ife_build  #
+#  build  #
 #= ========= =#
 """
-    ife_layer_attrs(l::ife_build__layer) -> (name, color)
+    ife_layer_attrs(l::build__layer) -> (name, color)
 
 Map an IFE build layer to a display label and color using IMAS layer-type enums.
 """
-function ife_layer_attrs(l::ife_build__layer)
+function ife_layer_attrs(l::build__layer)
     name = IMASdd.ismissing(l, :name) ? "" : l.name
     color = :gray
     if !IMASdd.ismissing(l, :type)
@@ -41,7 +41,7 @@ function ife_layer_attrs(l::ife_build__layer)
     return name, color
 end
 
-@recipe function plot_ife_build(ife::ife_build; cx=true)
+@recipe function plot_build(ife::build; cx=true)
     legend_position --> :outerbottomright
     aspect_ratio := :equal
     grid --> :none
@@ -52,7 +52,7 @@ end
     end
 end
 
-@recipe function plot_ife_build_layers(layers::AbstractVector{<:ife_build__layer}; cx=true)
+@recipe function plot_build_layers(layers::AbstractVector{<:build__layer}; cx=true)
     legend_position --> :outerbottomright
     grid --> :none
 
@@ -118,9 +118,9 @@ end
 end
 
 #= ========== =#
-#  ife_driver  #
+#  driver  #
 #= ========== =#
-@recipe function plot_ife_driver(drv::ife_driver)
+@recipe function plot_driver(drv::driver)
     isempty(drv.beam) && return
 
     P_wall = 0.0
