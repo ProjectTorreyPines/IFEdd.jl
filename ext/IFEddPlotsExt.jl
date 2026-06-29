@@ -3,7 +3,7 @@
 
 module IFEddPlotsExt
 
-using IFEdd: build, driver, build__layer
+using IFEdd
 using IMAS
 using IMASdd
 using Plots  # provides @recipe, @series (re-exports RecipesBase)
@@ -12,11 +12,11 @@ using Plots  # provides @recipe, @series (re-exports RecipesBase)
 #  build  #
 #= ========= =#
 """
-    ife_layer_attrs(l::build__layer) -> (name, color)
+    layer_attrs(l::IFEdd.build__layer) -> (name, color)
 
 Map an IFE build layer to a display label and color using IMAS layer-type enums.
 """
-function ife_layer_attrs(l::build__layer)
+function layer_attrs(l::IFEdd.build__layer)
     name = IMASdd.ismissing(l, :name) ? "" : l.name
     color = :gray
     if !IMASdd.ismissing(l, :type)
@@ -41,18 +41,18 @@ function ife_layer_attrs(l::build__layer)
     return name, color
 end
 
-@recipe function plot_build(ife::build; cx=true)
+@recipe function plot_build(bd::IFEdd.build; cx=true)
     legend_position --> :outerbottomright
     aspect_ratio := :equal
     grid --> :none
 
     @series begin
         cx := cx
-        ife.layer
+        bd.layer
     end
 end
 
-@recipe function plot_build_layers(layers::AbstractVector{<:build__layer}; cx=true)
+@recipe function plot_build_layers(layers::AbstractVector{<:IFEdd.build__layer}; cx=true)
     legend_position --> :outerbottomright
     grid --> :none
 
@@ -73,7 +73,7 @@ end
         seen_labels = Set{String}()
         for layer in Iterators.reverse(layers)
             IMASdd.ismissing(layer, :end_radius) && continue
-            name, color = ife_layer_attrs(layer)
+            name, color = layer_attrs(layer)
             r_out = layer.end_radius
             r_circ = r_out .* cos.(ϕ)
             z_circ = r_out .* sin.(ϕ)
@@ -95,7 +95,7 @@ end
         seen_labels = Set{String}()
         for layer in layers
             IMASdd.ismissing(layer, :thickness) && continue
-            name, color = ife_layer_attrs(layer)
+            name, color = layer_attrs(layer)
             show_label = !isempty(name) && name ∉ seen_labels
             show_label && push!(seen_labels, name)
             @series begin
@@ -120,7 +120,7 @@ end
 #= ========== =#
 #  driver  #
 #= ========== =#
-@recipe function plot_driver(drv::driver)
+@recipe function plot_driver(drv::IFEdd.driver)
     isempty(drv.beam) && return
 
     P_wall = 0.0
