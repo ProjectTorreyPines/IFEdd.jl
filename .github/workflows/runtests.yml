@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - "1.11"
+          - "1.x"
+        # Windows is deliberately absent: the generator's atomic write relies on
+        # `mv` semantics that have never been exercised there. Add it once that
+        # path is verified.
+        os:
+          - ubuntu-latest
+          - macos-latest
+        arch:
+          - x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+
+      - uses: julia-actions/cache@v2
+
+      - name: Add FuseRegistry
+        run: |
+          julia -e 'using Pkg; try; Pkg.Registry.rm("FuseRegistry"); catch; end; Pkg.Registry.add(RegistrySpec(url="https://github.com/ProjectTorreyPines/FuseRegistry.jl.git")); Pkg.Registry.add("General"); Pkg.Registry.update()'
+
+      - name: Replace git@github.com with https in Package.toml files
+        run: |
+          julia -e '
+            using Pkg
+            registry_path = joinpath(first(DEPOT_PATH), "registries", "FuseRegistry")
+            if isdir(registry_path)
+              for (root, dirs, files) in walkdir(registry_path)
+                for file in files
+                  if endswith(file, "Package.toml")
+                    filepath = joinpath(root, file)
+                    content = read(filepath, String)
+                    content = replace(content, "git@github.com:" => "https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/")
+                    write(filepath, content)
+                  end
+                end
+              end
+            end
+          '
+
+      - name: Install dependencies
+        run: |
+          julia -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+          '
+
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - uses: julia-actions/julia-runtest@v1
+
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
