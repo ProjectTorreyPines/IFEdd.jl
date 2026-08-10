@@ -1,0 +1,22 @@
+{
+ "my_efficiency": {
+  "_supertype": "AbstractIFEDriverBeamEfficiency",
+  "data_type": "STRUCTURE",
+  "documentation": "Fixture: driver-beam efficiency with cooling correction"
+ },
+ "my_efficiency.conversion": {
+  "data_type": "FLT_0D",
+  "documentation": "Wall-plug -> beam conversion fraction",
+  "type": "static"
+ },
+ "my_efficiency.coupling": {
+  "data_type": "FLT_0D",
+  "documentation": "Beam -> target coupling fraction",
+  "type": "static"
+ },
+ "my_efficiency.cooling_correction": {
+  "data_type": "FLT_0D",
+  "documentation": "NEW field not in IFEdd default — cooling-system overhead",
+  "type": "static"
+ }
+}

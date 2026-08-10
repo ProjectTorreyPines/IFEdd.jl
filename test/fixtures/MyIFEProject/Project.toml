@@ -1,0 +1,14 @@
+name = "MyIFEProject"
+uuid = "6bd80645-0264-59fc-8d3b-8039681d527f"
+version = "0.1.0"
+authors = ["IFEdd test fixture"]
+
+[deps]
+IFEdd = "b7ef78e8-7dbb-4c2e-aaed-bb48b048103f"
+IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

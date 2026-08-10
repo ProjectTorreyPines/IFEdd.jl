@@ -1,0 +1,28 @@
+{
+ "my_summary": {
+  "_supertype": "AbstractIFESummary",
+  "documentation": "Test-fixture custom IFE summary (depth-1 scalars + depth-2 beam.energy)"
+ },
+ "my_summary.gain": {
+  "data_type": "FLT_0D",
+  "documentation": "Target gain G = E_fusion / E_laser",
+  "type": "static",
+  "units": "-"
+ },
+ "my_summary.yield": {
+  "data_type": "FLT_0D",
+  "documentation": "Fusion yield per shot",
+  "type": "static",
+  "units": "MJ"
+ },
+ "my_summary.beam": {
+  "data_type": "STRUCTURE",
+  "documentation": "Nested beam parameters (exercises depth-2 emission)"
+ },
+ "my_summary.beam.energy": {
+  "data_type": "FLT_0D",
+  "documentation": "Beam energy delivered to target",
+  "type": "static",
+  "units": "J"
+ }
+}

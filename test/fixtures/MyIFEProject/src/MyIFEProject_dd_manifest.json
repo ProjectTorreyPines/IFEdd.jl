@@ -1,0 +1,31 @@
+{
+  "generator_version": "1.0.0",
+  "ifedd_abstracts_sha256": "7d14d43ca8f5b7aa8af4a2053e9f7720c3749d7d8351b1d290f5cf99c394f8fb",
+  "ifedd_version": "3.0.0",
+  "inputs": {
+    "abstracts_json": "7d14d43ca8f5b7aa8af4a2053e9f7720c3749d7d8351b1d290f5cf99c394f8fb",
+    "user_schema:my_summary": "50c58019e8c556120752b4855f5e9b2b29fe0aaafc14c144298bf21eb4a5a093"
+  },
+  "outputs": {
+    "MyIFEProject_dd.jl": "d123d7bef3c0146ded60d2269683cc9614dbf6763d0379b912f058c173503971",
+    "MyIFEProject_idstypes.jl": "9ff61b4ffa70007a321df47024f0da211aea80d729dece7debeac5730e948193"
+  },
+  "slot_bindings": {
+    "build": {
+      "abstract": "AbstractIFEBuild",
+      "concrete": "build",
+      "source": "ifedd-default"
+    },
+    "driver": {
+      "abstract": "AbstractIFEDriver",
+      "concrete": "driver",
+      "source": "ifedd-default"
+    },
+    "summary": {
+      "abstract": "AbstractIFESummary",
+      "concrete": "my_summary",
+      "source": "user"
+    }
+  },
+  "target_module": "MyIFEProject"
+}

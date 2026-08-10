@@ -1,0 +1,32 @@
+{
+  "generator_version": "1.0.0",
+  "ifedd_abstracts_sha256": "7d14d43ca8f5b7aa8af4a2053e9f7720c3749d7d8351b1d290f5cf99c394f8fb",
+  "ifedd_version": "3.0.0",
+  "inputs": {
+    "abstracts_json": "7d14d43ca8f5b7aa8af4a2053e9f7720c3749d7d8351b1d290f5cf99c394f8fb",
+    "user_schema:my_efficiency": "6470cb03938cf4e0bc9b3004225e379381cf6259ac6da35c8391775dbcbfa0c1",
+    "user_schema:my_layer": "8cc17be804416e0fc9aa85f5e8d3360367e102f4ed2c83d45f520487e971d337"
+  },
+  "outputs": {
+    "MyIFEProject_subids_dd.jl": "623844192f56eb9ef74c6c4dfd1f48b427b136184c3449765c43f9a119653a55",
+    "MyIFEProject_subids_idstypes.jl": "ffa3b54ce4c70922ee8025fa894f38f44e13bb5e3762060e26cf509bd328e1e4"
+  },
+  "slot_bindings": {
+    "build": {
+      "abstract": "AbstractIFEBuild",
+      "concrete": "build",
+      "source": "ifedd-default"
+    },
+    "driver": {
+      "abstract": "AbstractIFEDriver",
+      "concrete": "driver",
+      "source": "ifedd-default"
+    },
+    "summary": {
+      "abstract": "AbstractIFESummary",
+      "concrete": "summary",
+      "source": "ifedd-default"
+    }
+  },
+  "target_module": "MyIFEProject_subids"
+}

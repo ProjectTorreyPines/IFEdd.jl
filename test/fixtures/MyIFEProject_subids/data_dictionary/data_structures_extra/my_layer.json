@@ -1,0 +1,24 @@
+{
+ "my_layer": {
+  "_supertype": "AbstractIFEBuildLayer",
+  "data_type": "STRUCT_ARRAY",
+  "documentation": "Fixture: custom IFE chamber layer with hohlraum cost"
+ },
+ "my_layer[:].name": {
+  "data_type": "STR_0D",
+  "documentation": "Layer name",
+  "type": "static"
+ },
+ "my_layer[:].thickness": {
+  "data_type": "FLT_0D",
+  "documentation": "Radial thickness",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].cost_rate": {
+  "data_type": "FLT_0D",
+  "documentation": "Per-m^3 cost (NEW field not in IFEdd default)",
+  "type": "static",
+  "units": "USD/m^3"
+ }
+}

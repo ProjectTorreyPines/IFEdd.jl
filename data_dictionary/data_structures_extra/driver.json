@@ -1,8 +1,10 @@
 {
  "driver": {
+  "_supertype": "AbstractIFEDriver",
   "documentation": "IFE (Inertial Fusion Energy) driver system"
  },
  "driver.beam": {
+  "_supertype": "AbstractIFEDriverBeam",
   "coordinates": [
    "1...N"
   ],
@@ -10,6 +12,7 @@
   "documentation": "List of beams (or beam lines/ports) in the IFE driver system"
  },
  "driver.beam[:].efficiency": {
+  "_supertype": "AbstractIFEDriverBeamEfficiency",
   "data_type": "STRUCTURE",
   "documentation": "Driver efficiency parameters for this beam line"
  },
@@ -70,6 +73,7 @@
   "units": "m"
  },
  "driver.code": {
+  "_supertype": "AbstractIDSCode",
   "data_type": "STRUCTURE",
   "documentation": "Generic decription of the code-specific parameters for the code that has produced this IDS",
   "full_path": "driver/code",
@@ -92,6 +96,7 @@
   "type": "constant"
  },
  "driver.code.library": {
+  "_supertype": "AbstractIDSCodeLibrary",
   "coordinates": [
    "1...N"
   ],
@@ -185,6 +190,7 @@
   "type": "constant"
  },
  "driver.ids_properties": {
+  "_supertype": "AbstractIDSProperties",
   "data_type": "STRUCTURE",
   "documentation": "Interface Data Structure properties. This element identifies the node above as an IDS",
   "full_path": "driver/ids_properties",
@@ -256,6 +262,7 @@
   "type": "constant"
  },
  "driver.ids_properties.plugins": {
+  "_supertype": "AbstractIDSPropertiesPlugins",
   "data_type": "STRUCTURE",
   "documentation": "Information about the plugins used to write/read this IDS. This structure is filled automatically by the Access Layer at GET/PUT time, no need to fill it via a user program.",
   "full_path": "driver/ids_properties/plugins",
@@ -533,6 +540,7 @@
   "type": "constant"
  },
  "driver.ids_properties.provenance": {
+  "_supertype": "AbstractIDSPropertiesProvenance",
   "data_type": "STRUCTURE",
   "documentation": "Provenance information about this IDS",
   "full_path": "driver/ids_properties/provenance",

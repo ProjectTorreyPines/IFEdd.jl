@@ -24,7 +24,7 @@ mutable struct FilledFields____summary__target <: IMASdd.FilledFields
     var"temperature_scale_σ"::Bool
 end
 
-mutable struct summary__target{T} <: IMASdd.IDS{T}
+mutable struct summary__target{T} <: AbstractIFESummaryTarget{T}
     var"ablation_pressure" :: T
     var"ablation_pressure_σ" :: T
     var"areal_density" :: T
@@ -112,7 +112,7 @@ mutable struct FilledFields____summary__ids_properties__provenance <: IMASdd.Fil
     var"node"::Bool
 end
 
-mutable struct summary__ids_properties__provenance{T} <: IMASdd.IDS{T}
+mutable struct summary__ids_properties__provenance{T} <: AbstractIDSPropertiesProvenance{T}
     var"node"::IMASdd.IDSvector{summary__ids_properties__provenance__node{T}}
     _name::Symbol
     _filled::FilledFields____summary__ids_properties__provenance
@@ -317,7 +317,7 @@ mutable struct FilledFields____summary__ids_properties__plugins <: IMASdd.Filled
     var"node"::Bool
 end
 
-mutable struct summary__ids_properties__plugins{T} <: IMASdd.IDS{T}
+mutable struct summary__ids_properties__plugins{T} <: AbstractIDSPropertiesPlugins{T}
     var"infrastructure_get"::summary__ids_properties__plugins__infrastructure_get{T}
     var"infrastructure_put"::summary__ids_properties__plugins__infrastructure_put{T}
     var"node"::IMASdd.IDSvector{summary__ids_properties__plugins__node{T}}
@@ -377,7 +377,7 @@ mutable struct FilledFields____summary__ids_properties <: IMASdd.FilledFields
     var"version_put"::Bool
 end
 
-mutable struct summary__ids_properties{T} <: IMASdd.IDS{T}
+mutable struct summary__ids_properties{T} <: AbstractIDSProperties{T}
     var"comment" :: String
     var"creation_date" :: String
     var"homogeneous_time" :: Int
@@ -416,7 +416,7 @@ mutable struct FilledFields____summary__code__library <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct summary__code__library{T} <: IMASdd.IDSvectorStaticElement{T}
+mutable struct summary__code__library{T} <: AbstractIDSCodeLibrary{T}
     var"commit" :: String
     var"description" :: String
     var"name" :: String
@@ -449,7 +449,7 @@ mutable struct FilledFields____summary__code <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct summary__code{T} <: IMASdd.IDS{T}
+mutable struct summary__code{T} <: AbstractIDSCode{T}
     var"commit" :: String
     var"description" :: String
     var"library"::IMASdd.IDSvector{summary__code__library{T}}
@@ -481,7 +481,7 @@ mutable struct FilledFields____summary <: IMASdd.FilledFields
     var"time"::Bool
 end
 
-mutable struct summary{T} <: IMASdd.IDStop{T}
+mutable struct summary{T} <: AbstractIFESummary{T}
     var"code"::summary__code{T}
     var"ids_properties"::summary__ids_properties{T}
     var"target"::summary__target{T}
@@ -820,7 +820,7 @@ mutable struct FilledFields____driver__ids_properties__provenance <: IMASdd.Fill
     var"node"::Bool
 end
 
-mutable struct driver__ids_properties__provenance{T} <: IMASdd.IDS{T}
+mutable struct driver__ids_properties__provenance{T} <: AbstractIDSPropertiesProvenance{T}
     var"node"::IMASdd.IDSvector{driver__ids_properties__provenance__node{T}}
     _name::Symbol
     _filled::FilledFields____driver__ids_properties__provenance
@@ -1025,7 +1025,7 @@ mutable struct FilledFields____driver__ids_properties__plugins <: IMASdd.FilledF
     var"node"::Bool
 end
 
-mutable struct driver__ids_properties__plugins{T} <: IMASdd.IDS{T}
+mutable struct driver__ids_properties__plugins{T} <: AbstractIDSPropertiesPlugins{T}
     var"infrastructure_get"::driver__ids_properties__plugins__infrastructure_get{T}
     var"infrastructure_put"::driver__ids_properties__plugins__infrastructure_put{T}
     var"node"::IMASdd.IDSvector{driver__ids_properties__plugins__node{T}}
@@ -1085,7 +1085,7 @@ mutable struct FilledFields____driver__ids_properties <: IMASdd.FilledFields
     var"version_put"::Bool
 end
 
-mutable struct driver__ids_properties{T} <: IMASdd.IDS{T}
+mutable struct driver__ids_properties{T} <: AbstractIDSProperties{T}
     var"comment" :: String
     var"creation_date" :: String
     var"homogeneous_time" :: Int
@@ -1124,7 +1124,7 @@ mutable struct FilledFields____driver__code__library <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct driver__code__library{T} <: IMASdd.IDSvectorStaticElement{T}
+mutable struct driver__code__library{T} <: AbstractIDSCodeLibrary{T}
     var"commit" :: String
     var"description" :: String
     var"name" :: String
@@ -1157,7 +1157,7 @@ mutable struct FilledFields____driver__code <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct driver__code{T} <: IMASdd.IDS{T}
+mutable struct driver__code{T} <: AbstractIDSCode{T}
     var"commit" :: String
     var"description" :: String
     var"library"::IMASdd.IDSvector{driver__code__library{T}}
@@ -1189,7 +1189,7 @@ mutable struct FilledFields____driver__beam___efficiency <: IMASdd.FilledFields
     var"coupling_σ"::Bool
 end
 
-mutable struct driver__beam___efficiency{T} <: IMASdd.IDS{T}
+mutable struct driver__beam___efficiency{T} <: AbstractIFEDriverBeamEfficiency{T}
     var"conversion" :: T
     var"conversion_σ" :: T
     var"coupling" :: T
@@ -1225,7 +1225,7 @@ mutable struct FilledFields____driver__beam <: IMASdd.FilledFields
     var"wavelength_σ"::Bool
 end
 
-mutable struct driver__beam{T} <: IMASdd.IDSvectorStaticElement{T}
+mutable struct driver__beam{T} <: AbstractIFEDriverBeam{T}
     var"efficiency"::driver__beam___efficiency{T}
     var"energy" :: T
     var"energy_σ" :: T
@@ -1262,7 +1262,7 @@ mutable struct FilledFields____driver <: IMASdd.FilledFields
     var"time"::Bool
 end
 
-mutable struct driver{T} <: IMASdd.IDStop{T}
+mutable struct driver{T} <: AbstractIFEDriver{T}
     var"beam"::IMASdd.IDSvector{driver__beam{T}}
     var"code"::driver__code{T}
     var"ids_properties"::driver__ids_properties{T}
@@ -1836,7 +1836,7 @@ mutable struct FilledFields____build__layer___outline <: IMASdd.FilledFields
     var"z_σ"::Bool
 end
 
-mutable struct build__layer___outline{T} <: IMASdd.IDS{T}
+mutable struct build__layer___outline{T} <: AbstractIFEBuildLayerOutline{T}
     var"r" :: Vector{T}
     var"r_σ" :: Vector{T}
     var"z" :: Vector{T}
@@ -1873,7 +1873,7 @@ mutable struct FilledFields____build__layer <: IMASdd.FilledFields
     var"volume_σ"::Bool
 end
 
-mutable struct build__layer{T} <: IMASdd.IDSvectorStaticElement{T}
+mutable struct build__layer{T} <: AbstractIFEBuildLayer{T}
     var"area" :: T
     var"area_σ" :: T
     var"end_radius" :: T
@@ -1956,7 +1956,7 @@ mutable struct FilledFields____build__ids_properties__provenance <: IMASdd.Fille
     var"node"::Bool
 end
 
-mutable struct build__ids_properties__provenance{T} <: IMASdd.IDS{T}
+mutable struct build__ids_properties__provenance{T} <: AbstractIDSPropertiesProvenance{T}
     var"node"::IMASdd.IDSvector{build__ids_properties__provenance__node{T}}
     _name::Symbol
     _filled::FilledFields____build__ids_properties__provenance
@@ -2161,7 +2161,7 @@ mutable struct FilledFields____build__ids_properties__plugins <: IMASdd.FilledFi
     var"node"::Bool
 end
 
-mutable struct build__ids_properties__plugins{T} <: IMASdd.IDS{T}
+mutable struct build__ids_properties__plugins{T} <: AbstractIDSPropertiesPlugins{T}
     var"infrastructure_get"::build__ids_properties__plugins__infrastructure_get{T}
     var"infrastructure_put"::build__ids_properties__plugins__infrastructure_put{T}
     var"node"::IMASdd.IDSvector{build__ids_properties__plugins__node{T}}
@@ -2221,7 +2221,7 @@ mutable struct FilledFields____build__ids_properties <: IMASdd.FilledFields
     var"version_put"::Bool
 end
 
-mutable struct build__ids_properties{T} <: IMASdd.IDS{T}
+mutable struct build__ids_properties{T} <: AbstractIDSProperties{T}
     var"comment" :: String
     var"creation_date" :: String
     var"homogeneous_time" :: Int
@@ -2260,7 +2260,7 @@ mutable struct FilledFields____build__code__library <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct build__code__library{T} <: IMASdd.IDSvectorStaticElement{T}
+mutable struct build__code__library{T} <: AbstractIDSCodeLibrary{T}
     var"commit" :: String
     var"description" :: String
     var"name" :: String
@@ -2293,7 +2293,7 @@ mutable struct FilledFields____build__code <: IMASdd.FilledFields
     var"version"::Bool
 end
 
-mutable struct build__code{T} <: IMASdd.IDS{T}
+mutable struct build__code{T} <: AbstractIDSCode{T}
     var"commit" :: String
     var"description" :: String
     var"library"::IMASdd.IDSvector{build__code__library{T}}
@@ -2325,7 +2325,7 @@ mutable struct FilledFields____build <: IMASdd.FilledFields
     var"time"::Bool
 end
 
-mutable struct build{T} <: IMASdd.IDStop{T}
+mutable struct build{T} <: AbstractIFEBuild{T}
     var"code"::build__code{T}
     var"ids_properties"::build__ids_properties{T}
     var"layer"::IMASdd.IDSvector{build__layer{T}}

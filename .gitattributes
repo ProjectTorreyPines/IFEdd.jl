@@ -1,0 +1,4 @@
+# Force LF line endings on generated fixture artifacts so freshness
+# byte-comparisons survive cross-OS checkouts.
+test/fixtures/**/*.jl text eol=lf
+test/fixtures/**/*.json text eol=lf

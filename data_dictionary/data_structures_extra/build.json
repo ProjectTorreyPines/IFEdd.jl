@@ -1,8 +1,10 @@
 {
  "build": {
+  "_supertype": "AbstractIFEBuild",
   "documentation": "Build of the IFE (Inertial Fusion Energy) device"
  },
  "build.code": {
+  "_supertype": "AbstractIDSCode",
   "data_type": "STRUCTURE",
   "documentation": "Generic decription of the code-specific parameters for the code that has produced this IDS",
   "full_path": "build/code",
@@ -25,6 +27,7 @@
   "type": "constant"
  },
  "build.code.library": {
+  "_supertype": "AbstractIDSCodeLibrary",
   "coordinates": [
    "1...N"
   ],
@@ -118,6 +121,7 @@
   "type": "constant"
  },
  "build.ids_properties": {
+  "_supertype": "AbstractIDSProperties",
   "data_type": "STRUCTURE",
   "documentation": "Interface Data Structure properties. This element identifies the node above as an IDS",
   "full_path": "build/ids_properties",
@@ -189,6 +193,7 @@
   "type": "constant"
  },
  "build.ids_properties.plugins": {
+  "_supertype": "AbstractIDSPropertiesPlugins",
   "data_type": "STRUCTURE",
   "documentation": "Information about the plugins used to write/read this IDS. This structure is filled automatically by the Access Layer at GET/PUT time, no need to fill it via a user program.",
   "full_path": "build/ids_properties/plugins",
@@ -466,6 +471,7 @@
   "type": "constant"
  },
  "build.ids_properties.provenance": {
+  "_supertype": "AbstractIDSPropertiesProvenance",
   "data_type": "STRUCTURE",
   "documentation": "Provenance information about this IDS",
   "full_path": "build/ids_properties/provenance",
@@ -548,6 +554,7 @@
   "type": "constant"
  },
  "build.layer": {
+  "_supertype": "AbstractIFEBuildLayer",
   "coordinates": [
    "1...N"
   ],
@@ -577,6 +584,7 @@
   "type": "static"
  },
  "build.layer[:].outline": {
+  "_supertype": "AbstractIFEBuildLayerOutline",
   "data_type": "STRUCTURE",
   "documentation": "Poloidal cross-section outline of the layer boundary"
  },

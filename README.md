@@ -1,71 +1,29 @@
-# IFEdd
+[![CI](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml/badge.svg)](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml)
 
-IFE (Inertial Fusion Energy) data dictionary — satellite of [IMASdd](https://github.com/ProjectTorreyPines/IMASdd.jl).
+# IFEdd.jl
 
-Defines IFE-specific IDS types (`summary`, `build`, `driver`) as
-subtypes of IMASdd's abstract hierarchy and a container `dd{T} <: IMASdd.DD{T}`
-that embeds the IDS used by IFE workflows. New schema metadata is registered
-into `IMASdd._all_info` at package load via `__init__()`. No IMASdd source is
-modified or duplicated.
+`IFEdd.jl` is the Inertial Fusion Energy (IFE) data dictionary, a satellite of [`IMASdd.jl`](https://github.com/ProjectTorreyPines/IMASdd.jl). It contributes the IDSs that IFE workflows need without modifying or duplicating any IMASdd source.
 
-Higher-level orchestration (actors, init, study cases) lives in the companion
-package [IFE.jl](https://github.com/ProjectTorreyPines/IFE.jl).
+Higher-level orchestration for IFE — actors, initialization, study cases — lives in the companion package [`IFE.jl`](https://github.com/ProjectTorreyPines/IFE.jl).
 
-## Layout
+## Data schema
 
-```
-src/
-  IFEdd.jl         # main module
-  dd_idstypes.jl   # AUTO-GENERATED leaf IDS structs
-  dd.jl            # AUTO-GENERATED top-level container + __init__()
-ext/
-  IFEddPlotsExt.jl # Plots recipes (package extension, weakdep on Plots)
-data_dictionary/
-  data_structures_extra/   # IFE IDS JSON schemas (source of truth)
-scripts/
-  generate.jl              # codegen runner
-```
+IFE devices do not map onto the magnetic-confinement ontology that IMAS was written for: there is no equilibrium to solve, and the machine is described by a driver, a target, and a chamber rather than by coils and a plasma boundary. `IFEdd.jl` adds the IDSs that describe those (`summary`, `build`, `driver`) as JSON schemas alongside IMASdd's own, and generates the corresponding Julia types from them. Schema metadata is registered into IMASdd's shared registry when the package loads, so IFE quantities are introspectable through exactly the same API as any IMAS quantity.
 
-IMASdd's own `data_structures/` and `cocos_signals.jl` are reached via
-`pkgdir(IMASdd)` at codegen time, so they are intentionally absent here.
+## A sibling data dictionary
 
-## Quick start
+`IMASdd.dd` is one concrete realization of the abstract `IMASdd.DD` container, not the only possible one. `IFEdd.dd` is a second: it embeds the IFE-specific IDSs together with the IMASdd IDSs that carry over unchanged (`core_profiles`, `costing`, `balance_of_plant`, …), and subtypes `IMASdd.DD` directly rather than deriving from `IMASdd.dd`.
 
-```julia
-using IFEdd, IMASdd
+The practical consequence is that any routine written against the abstract type — throughout IMASdd, IMAS, and FUSE — accepts an IFE data dictionary without modification, while IFE-specific physics dispatches on the IFE types.
 
-d = IFEdd.dd()                       # `dd` is NOT exported — always qualify
-d isa IMASdd.DD                      # true
+## Customizable containers
 
-IMASdd._all_info[(IFEdd.dd, :summary)]
-IMASdd.isfrozen(d)                   # false
-```
+A project with its own IFE variant rarely wants IFEdd's defaults verbatim. `IFEdd.generate_user_dd` bakes a customized container for a downstream package, substituting user-supplied concrete IDSs for IFEdd's defaults at any depth of the tree.
 
-Run tests:
+Substituted types keep their place in the abstract hierarchy, so code written against the abstracts continues to dispatch correctly, and the generated package carries a provenance manifest that lets CI detect drift from the schemas it was baked against.
 
-```bash
-cc-julia-test-runner /Users/yoo/.julia/dev/IFEdd
-```
+## Online documentation
 
-## Regenerating the data dictionary
+For more details, see the [online documentation](https://projecttorreypines.github.io/IFEdd.jl/dev).
 
-After editing any JSON in `data_dictionary/data_structures_extra/`:
-
-```bash
-julia --project=. scripts/generate.jl
-```
-
-The script symlinks IMASdd's `data_structures/` + IFEdd's `*.json` into a
-temp workdir, calls `GenerateDD.imas_julia_struct(...)`, qualifies emitted
-identifiers (`Info` → `IMASdd.Info`, etc.), and writes
-`src/dd_idstypes.jl` + `src/dd.jl`. The temp workdir is removed on exit.
-
-## Type piracy safety
-
-Every method dispatches on at least one IFEdd-owned type:
-
-| Definition | Safe? |
-|---|---|
-| `dd{T} <: IMASdd.DD{T}` (lives inside `IFEdd`, not exported) | yes |
-| `IMASdd._all_info[(IFEdd.dd, :summary)] = ...` | yes |
-| `ext: plot recipe(::build)` | yes |
+![Docs](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/make_docs.yml/badge.svg)

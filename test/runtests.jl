@@ -2,6 +2,20 @@ using Test
 using IFEdd
 using IMASdd
 
+include("test_abstracts_derive.jl")    # abstracts.json drift — runs FIRST
+include("test_abstracts.jl")
+include("test_supertype_emission.jl")  # supertype emission invariant
+include("test_no_top_level_all_info_reads.jl")
+include("test_shared_helpers.jl")
+include("test_user_dd_emit.jl")
+include("test_user_dd_fixture.jl")
+include("test_bake_dd_macro.jl")
+include("test_substitution_graph.jl")  # substitution graph builder units
+include("test_substitution_regex.jl")  # regex pass against a canonical fragment
+include("test_substitution_emission.jl")  # end-to-end substitution + dispatch
+include("test_subids_fixture.jl")      # sub-IDS fixture byte-equal gate
+include("test_example_custom_layer.jl")   # published example stays runnable
+
 @testset "IFEdd" begin
 
     @testset "Module loading" begin
@@ -12,6 +26,14 @@ using IMASdd
     end
 
     @testset "Type hierarchy" begin
+        # dd → AbstractIFEDD → IMASdd.DD, with the middle link a real one
+        @test typeof(IFEdd.dd()) <: IFEdd.AbstractIFEDD{Float64}
+        @test IFEdd.AbstractIFEDD{Float64} <: IMASdd.DD{Float64}
+        @test supertype(IFEdd.dd{Float64}) === IFEdd.AbstractIFEDD{Float64}
+        @test isabstracttype(IFEdd.AbstractIFEDD)
+        # IMASdd's own container is a sibling, not an IFE container
+        @test !(IMASdd.dd{Float64} <: IFEdd.AbstractIFEDD)
+
         @test IFEdd.dd{Float64} <: IMASdd.DD{Float64}
         @test IFEdd.dd{Float64} <: IMASdd.IDS{Float64}
         @test IFEdd.summary{Float64} <: IMASdd.IDS{Float64}

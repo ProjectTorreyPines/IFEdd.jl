@@ -19,6 +19,8 @@ Run: `julia scripts/generate.jl`.
 """
 
 using IMASdd
+using IFEdd: path_to_struct_name, classify_parent
+using JSON
 using GenerateDD: imas_dd_ids_names, imas_dd_ids, imas_julia_struct
 
 const IMASDD_ROOT = pkgdir(IMASdd)
@@ -51,6 +53,84 @@ const EXTRA_IDS = String[
 const TOP_NAME = "dd"
 
 @info "Paths" IMASDD_DD IFEDD_DD OUT_LEAVES OUT_CONTAINER
+
+"""
+Read ALL `_supertype` markers from IFEdd's three local
+schemas, walking every path (not just top-level). Returns
+`(overrides::Dict, parents::Dict)`:
+
+- `overrides[struct_name] = abstract_name` — what to substitute to.
+- `parents[struct_name]   = qualified_parent_str` — what the
+  GenerateDD-emitted struct currently has on the right of `<:`, so
+  `apply_supertype_overrides` can build a precise regex.
+
+The two dicts are returned together so the override pass can match
+against the exact qualified parent string (`"IMASdd.IDStop{T}"`,
+`"IMASdd.IDS{T}"`, or `"IMASdd.IDSvectorStaticElement{T}"`) and raise
+`GeneratorError(:override_missed, …)` if any planned substitution
+fails to fire.
+"""
+function read_all_supertypes()
+    extras_dir = joinpath(IFEDD_DD, "data_structures_extra")
+    overrides = Dict{String,String}()
+    parents   = Dict{String,String}()
+    for filename in sort(readdir(extras_dir))
+        endswith(filename, ".json") || continue
+        raw = JSON.parsefile(joinpath(extras_dir, filename))
+        for (path, entry) in raw
+            entry isa AbstractDict || continue
+            haskey(entry, "_supertype") || continue
+            struct_name = path_to_struct_name(path)
+            overrides[struct_name] = String(entry["_supertype"])
+            parents[struct_name]   = classify_parent(path, entry) * "{T}"
+        end
+    end
+    return overrides, parents
+end
+
+"""
+Rewrite every `mutable struct <name>{T} <: <parent>{T}`
+to `<: <abstract>{T}` per the override map. Uses `\\b` anchors so that
+`build__layer` does NOT partial-match `build__layer___outline`.
+
+Invariant (pinned): this pass MUST run AFTER `postprocess`, because
+it matches against the QUALIFIED parent strings (`IMASdd.IDStop{T}`,
+`IMASdd.IDS{T}`, `IMASdd.IDSvectorStaticElement{T}`).
+
+Raises `IFEdd.GeneratorError(:override_missed, …)` if any planned
+substitution failed (signal that the schema and emitted code drifted
+out of sync, or `path_to_struct_name`/`classify_parent` mis-derived).
+"""
+function apply_supertype_overrides(content::String,
+                                    overrides::Dict{String,String},
+                                    parents::Dict{String,String})
+    missed = String[]
+    for (struct_name, abs_name) in overrides
+        parent_qualified = get(parents, struct_name, "IMASdd.IDS{T}")
+        escaped_parent = replace(parent_qualified, "{" => "\\{", "}" => "\\}")
+        # `\Q…\E` literalizes struct_name; `\{T\}` literal after struct
+        # name already disambiguates `build__layer` from
+        # `build__layer___outline` (which would have `_` after the name,
+        # not `{`). No trailing `\b` needed — would fail at line-end
+        # since both `}` and `\n` are non-word characters.
+        pattern = Regex("(mutable struct \\Q$(struct_name)\\E\\{T\\}\\s*<:\\s*)" *
+                        escaped_parent)
+        replacement = SubstitutionString("\\1$(abs_name){T}")
+        new_content = replace(content, pattern => replacement)
+        if new_content == content
+            push!(missed, "$(struct_name) <: $(parent_qualified) → $(abs_name)")
+        end
+        content = new_content
+    end
+    if !isempty(missed)
+        throw(IFEdd.GeneratorError(:override_missed,
+            "apply_supertype_overrides found no match for:\n  " *
+            join(missed, "\n  ") *
+            "\n(Schema markers and emitted code may have drifted; or " *
+            "path_to_struct_name / classify_parent mis-derived.)"))
+    end
+    return content
+end
 
 function setup_workdir()
     workdir = mktempdir(prefix="ifedd_gen_")
@@ -265,6 +345,15 @@ function main()
             cooked = qualify_extra_ids_in_container(cooked, EXTRA_IDS)
             cooked = filter_all_info_entries(cooked, EXTRA_IDS)
         end
+
+        overrides, parents = read_all_supertypes()
+        # The container has no JSON schema, so its abstract cannot come from a
+        # `_supertype` marker; declare it here and let the same count-asserted
+        # rewrite apply it.
+        overrides["dd"] = "AbstractIFEDD"
+        parents["dd"] = "IMASdd.DD{T}"
+        @info "Supertype overrides (all depths)" n=length(overrides) overrides=overrides
+        cooked = apply_supertype_overrides(cooked, overrides, parents)
 
         leaves, container = split_content(cooked)
 

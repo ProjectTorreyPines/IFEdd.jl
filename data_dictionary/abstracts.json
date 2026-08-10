@@ -1,0 +1,54 @@
+{
+  "_derived_from": "scripts/derive_abstracts.jl",
+  "version": "3.0.0",
+  "abstracts": {
+    "AbstractIDSCode": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIDSCodeLibrary": { "param": ["T"], "parent": "IMASdd.IDSvectorStaticElement{T}" },
+    "AbstractIDSProperties": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIDSPropertiesPlugins": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIDSPropertiesProvenance": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIFEBuild": { "param": ["T"], "parent": "IMASdd.IDStop{T}" },
+    "AbstractIFEBuildLayer": { "param": ["T"], "parent": "IMASdd.IDSvectorStaticElement{T}" },
+    "AbstractIFEBuildLayerOutline": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIFEDriver": { "param": ["T"], "parent": "IMASdd.IDStop{T}" },
+    "AbstractIFEDriverBeam": { "param": ["T"], "parent": "IMASdd.IDSvectorStaticElement{T}" },
+    "AbstractIFEDriverBeamEfficiency": { "param": ["T"], "parent": "IMASdd.IDS{T}" },
+    "AbstractIFESummary": { "param": ["T"], "parent": "IMASdd.IDStop{T}" },
+    "AbstractIFESummaryTarget": { "param": ["T"], "parent": "IMASdd.IDS{T}" }
+  },
+  "default_concretes": {
+    "AbstractIDSCode": {
+      "build": "build__code",
+      "driver": "driver__code",
+      "summary": "summary__code"
+    },
+    "AbstractIDSCodeLibrary": {
+      "build": "build__code__library",
+      "driver": "driver__code__library",
+      "summary": "summary__code__library"
+    },
+    "AbstractIDSProperties": {
+      "build": "build__ids_properties",
+      "driver": "driver__ids_properties",
+      "summary": "summary__ids_properties"
+    },
+    "AbstractIDSPropertiesPlugins": {
+      "build": "build__ids_properties__plugins",
+      "driver": "driver__ids_properties__plugins",
+      "summary": "summary__ids_properties__plugins"
+    },
+    "AbstractIDSPropertiesProvenance": {
+      "build": "build__ids_properties__provenance",
+      "driver": "driver__ids_properties__provenance",
+      "summary": "summary__ids_properties__provenance"
+    },
+    "AbstractIFEBuild": { "build": "build" },
+    "AbstractIFEBuildLayer": { "build": "build__layer" },
+    "AbstractIFEBuildLayerOutline": { "build": "build__layer___outline" },
+    "AbstractIFEDriver": { "driver": "driver" },
+    "AbstractIFEDriverBeam": { "driver": "driver__beam" },
+    "AbstractIFEDriverBeamEfficiency": { "driver": "driver__beam___efficiency" },
+    "AbstractIFESummary": { "summary": "summary" },
+    "AbstractIFESummaryTarget": { "summary": "summary__target" }
+  }
+}

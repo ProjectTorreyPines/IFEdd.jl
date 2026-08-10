@@ -1,0 +1,7 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+IFEdd = "b7ef78e8-7dbb-4c2e-aaed-bb48b048103f"
+IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
+
+[compat]
+Documenter = "1"

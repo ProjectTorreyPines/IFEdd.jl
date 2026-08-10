@@ -15,7 +15,7 @@ mutable struct FilledFields____dd <: IMASdd.FilledFields
     var"summary"::Bool
 end
 
-mutable struct dd{T} <: IMASdd.DD{T}
+mutable struct dd{T} <: AbstractIFEDD{T}
     var"balance_of_plant"::IMASdd.balance_of_plant{T}
     var"blanket"::IMASdd.blanket{T}
     var"build"::build{T}

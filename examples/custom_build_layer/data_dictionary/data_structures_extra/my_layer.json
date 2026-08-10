@@ -1,0 +1,84 @@
+{
+ "my_layer": {
+  "_supertype": "AbstractIFEBuildLayer",
+  "coordinates": [
+   "1...N"
+  ],
+  "data_type": "STRUCT_ARRAY",
+  "documentation": "Chamber layer, copied from IFEdd's `build.layer` and extended with `cost_rate`"
+ },
+ "my_layer[:].area": {
+  "data_type": "FLT_0D",
+  "documentation": "Inner surface area of the layer (4*pi*r^2 for spherical geometry)",
+  "type": "static",
+  "units": "m^2"
+ },
+ "my_layer[:].cost_rate": {
+  "data_type": "FLT_0D",
+  "documentation": "Fabrication cost per unit volume of this layer",
+  "type": "static",
+  "units": "USD/m^3"
+ },
+ "my_layer[:].end_radius": {
+  "data_type": "FLT_0D",
+  "documentation": "Outer radius of the layer",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].material": {
+  "data_type": "STR_0D",
+  "documentation": "Material of the layer",
+  "type": "static"
+ },
+ "my_layer[:].name": {
+  "data_type": "STR_0D",
+  "documentation": "Name of the layer",
+  "type": "static"
+ },
+ "my_layer[:].outline": {
+  "_supertype": "AbstractIFEBuildLayerOutline",
+  "data_type": "STRUCTURE",
+  "documentation": "Poloidal cross-section outline of the layer boundary"
+ },
+ "my_layer[:].outline.r": {
+  "coordinates": [
+   "1...N"
+  ],
+  "data_type": "FLT_1D",
+  "documentation": "Major radius",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].outline.z": {
+  "coordinates": [
+   "build.layer[:].outline.r"
+  ],
+  "data_type": "FLT_1D",
+  "documentation": "Height",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].start_radius": {
+  "data_type": "FLT_0D",
+  "documentation": "Inner radius of the layer",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].thickness": {
+  "data_type": "FLT_0D",
+  "documentation": "Radial thickness of the layer",
+  "type": "static",
+  "units": "m"
+ },
+ "my_layer[:].type": {
+  "data_type": "INT_0D",
+  "documentation": "Layer type code (follows BuildLayerType convention)\n-1) plasma/chamber (target ignition zone)\n0) gap (void/vacuum)\n3) shield\n4) blanket\n5) wall (first wall)\n6) vessel",
+  "type": "static"
+ },
+ "my_layer[:].volume": {
+  "data_type": "FLT_0D",
+  "documentation": "Volume of the layer",
+  "type": "static",
+  "units": "m^3"
+ }
+}

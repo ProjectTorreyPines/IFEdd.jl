@@ -22,3 +22,5 @@ Manifest.toml
 claudedocs/
 comparison/
 coverage/
+test_ife_study/
+*.h5
