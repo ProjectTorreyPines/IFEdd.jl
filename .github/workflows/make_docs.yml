@@ -3,11 +3,23 @@ name: Make Docs
 on:
   pull_request:
     branches: ["master"]
+    paths:
+      - "src/**"
+      - "ext/**"
+      - "docs/**"
+      - "examples/**"
+      - "data_dictionary/**"
+      - "Project.toml"
+      - ".github/workflows/make_docs.yml"
   push:
     branches:
       - master
     tags: '*'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-docs
+  cancel-in-progress: true
 
 jobs:
   make_docs:
@@ -16,6 +28,7 @@ jobs:
       statuses: write
     name: Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -42,9 +55,10 @@ jobs:
             Pkg.instantiate()
           '
 
-      # The docs pages are built from `@example` blocks, so this step executes
-      # every published snippet. A stale example fails the build.
+      # The pages are built from `@example` blocks, so this executes every
+      # published snippet — a stale example fails the build.
       - name: Build and deploy
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: julia --project=docs docs/make.jl

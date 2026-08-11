@@ -8,24 +8,37 @@ on:
       - dev
   pull_request:
 
+env:
+  PTP_READ_TOKEN: ${{ secrets.PTP_READ_TOKEN }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         version:
           - "1.11"
           - "1.x"
-        # Windows is deliberately absent: the generator's atomic write relies on
-        # `mv` semantics that have never been exercised there. Add it once that
-        # path is verified.
+        # Windows is deliberately absent: the generator writes through `mv`
+        # semantics that have never been exercised there.
         os:
           - ubuntu-latest
           - macos-latest
         arch:
           - x64
+        include:
+          # Upload coverage from one leg only — parallel partial uploads race
+          # codecov's merge and undercount.
+          - os: ubuntu-latest
+            version: "1.11"
+            coverage: true
 
     steps:
       - uses: actions/checkout@v4
@@ -70,8 +83,18 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
 
       - uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: ${{ matrix.coverage || false }}
 
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.coverage }}
         with:
+          # `ext/` holds the Plots recipes, which the generated container tests reach
+          directories: src,ext
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.coverage }}
+        with:
+          files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

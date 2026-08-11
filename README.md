@@ -1,4 +1,5 @@
 [![CI](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml/badge.svg)](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml)
+[![codecov](https://codecov.io/github/ProjectTorreyPines/IFEdd.jl/graph/badge.svg)](https://codecov.io/github/ProjectTorreyPines/IFEdd.jl)
 
 # IFEdd.jl
 
