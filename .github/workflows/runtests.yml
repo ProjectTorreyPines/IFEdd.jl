@@ -54,7 +54,11 @@ jobs:
         run: |
           julia -e 'using Pkg; try; Pkg.Registry.rm("FuseRegistry"); catch; end; Pkg.Registry.add(RegistrySpec(url="https://github.com/ProjectTorreyPines/FuseRegistry.jl.git")); Pkg.Registry.add("General"); Pkg.Registry.update()'
 
-      - name: Replace git@github.com with https in Package.toml files
+      # `GenerateDD` is a private repo, so Pkg cannot clone it anonymously.
+      # FuseRegistry now records plain `https://github.com/...` URLs (it used to
+      # use `git@github.com:`), so both prefixes are rewritten to carry the read
+      # token. `replace` scans once, so the two patterns cannot stack.
+      - name: Inject PTP_READ_TOKEN into FuseRegistry URLs
         run: |
           julia -e '
             using Pkg
@@ -65,7 +69,9 @@ jobs:
                   if endswith(file, "Package.toml")
                     filepath = joinpath(root, file)
                     content = read(filepath, String)
-                    content = replace(content, "git@github.com:" => "https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/")
+                    content = replace(content,
+                      "git@github.com:" => "https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/",
+                      "https://github.com/" => "https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/")
                     write(filepath, content)
                   end
                 end
