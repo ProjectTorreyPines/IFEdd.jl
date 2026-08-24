@@ -52,13 +52,26 @@ jobs:
             -e 's|git@github.com:|https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/|g' \
             -e 's|https://github.com/|https://project-torrey-pines:${{secrets.PTP_READ_TOKEN}}@github.com/|g' {} +
 
+      # TEMPORARY — remove once IMASdd 8.6.3 is registered.
+      # Released IMASdd v8.6.2 resolves IDS metadata by location string, which
+      # only sees structs defined inside the IMASdd module; a satellite-owned
+      # struct like `IFEdd.summary__target` is invisible to it, so every
+      # `@example` that shows an IFEdd IDS dies with `UndefVarError`. The fix
+      # (IMASdd PR #108, type-based lookup) is merged on master but unreleased —
+      # master still reports version 8.6.2, so `[compat] IMASdd = "8.6.2"` is
+      # satisfied and the resolver keeps the pinned checkout.
+      # `develop` must precede `add`: IFEdd is unregistered, so a resolve
+      # triggered before it is a path-dep fails with "expected package IFEdd
+      # [b7ef78e8] to be registered".
       - name: Install dependencies
         run: |
           julia --project=docs -e '
             using Pkg
             Pkg.activate("docs")
             Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.add(PackageSpec(url="https://github.com/ProjectTorreyPines/IMASdd.jl.git", rev="master"))
             Pkg.instantiate()
+            Pkg.status()
           '
 
       # The pages are built from `@example` blocks, so this executes every
