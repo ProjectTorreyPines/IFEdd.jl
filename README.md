@@ -1,4 +1,6 @@
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://projecttorreypines.github.io/IFEdd.jl/dev/)
 [![CI](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml/badge.svg)](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/runtests.yml)
+[![Docs](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/make_docs.yml/badge.svg)](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/make_docs.yml)
 [![codecov](https://codecov.io/github/ProjectTorreyPines/IFEdd.jl/graph/badge.svg)](https://codecov.io/github/ProjectTorreyPines/IFEdd.jl)
 
 # IFEdd.jl
@@ -25,6 +27,4 @@ Substituted types keep their place in the abstract hierarchy, so code written ag
 
 ## Online documentation
 
-For more details, see the [online documentation](https://projecttorreypines.github.io/IFEdd.jl/dev).
-
-![Docs](https://github.com/ProjectTorreyPines/IFEdd.jl/actions/workflows/make_docs.yml/badge.svg)
+For more details, see the [online documentation](https://projecttorreypines.github.io/IFEdd.jl/dev/).
