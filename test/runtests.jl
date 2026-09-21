@@ -1,6 +1,7 @@
 using Test
 using IFEdd
 using IMASdd
+using HelpPlots
 
 include("test_abstracts_derive.jl")    # abstracts.json drift — runs FIRST
 include("test_abstracts.jl")
@@ -15,6 +16,7 @@ include("test_substitution_regex.jl")  # regex pass against a canonical fragment
 include("test_substitution_emission.jl")  # end-to-end substitution + dispatch
 include("test_subids_fixture.jl")      # sub-IDS fixture byte-equal gate
 include("test_example_custom_layer.jl")   # published example stays runnable
+include("test_plots_ext.jl")              # Plots recipes — must work without IMAS
 
 @testset "IFEdd" begin
 
