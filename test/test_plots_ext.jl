@@ -29,12 +29,15 @@ function demo_dd()
         layer.thickness = r1 - r0
     end
 
-    # `power_launched` is a time series: IMASdd refuses the assignment until its
-    # coordinate `driver.time` exists.
-    dd.driver.time = [0.0]
+    # `driver.time` spans one repetition period — 0.1 s here, so 10 Hz. It is
+    # also the coordinate of `power_launched`, which IMASdd refuses to accept
+    # before it exists. The trace is shaped like a real shot: zero, the pulse,
+    # then zero again once it ends.
+    dd.driver.time = [0.0, 1.0e-8, 0.1]
     resize!(dd.driver.beam, 2)
     for beam in dd.driver.beam
-        beam.power_launched = [1.0e6]
+        beam.energy = 1.0e6                      # J per shot
+        beam.power_launched = [0.0, 1.0e14, 0.0]
         beam.efficiency.conversion = 0.1
         beam.efficiency.coupling = 0.85
     end
@@ -89,15 +92,25 @@ nseries(p) = length(p.series_list)
         p = plot(dd.driver)
         # `:bar` expands into two Plots series: the filled bars plus their markers
         @test nseries(p) == 2
-        # wall plug > launched > absorbed, in MW: 2 beams × 1 MW launched,
-        # η_conversion = 0.1, η_coupling = 0.85
+
+        # Average power, not the in-pulse trace: 2 beams × 1 MJ per shot over a
+        # 0.1 s period is 20 MW launched, /0.1 conversion = 200 MW at the wall
+        # plug, ×0.85 coupling = 17 MW absorbed. Reducing `power_launched` with
+        # `[end]` instead would read the trailing zero and draw nothing.
         levels = only(s[:y] for s in p.series_list if s[:seriestype] === :scatter)
-        @test levels ≈ [20.0, 2.0, 1.7]
+        @test levels ≈ [200.0, 20.0, 17.0]
 
         # With no beams the recipe must emit nothing. A bare `return` inside a
         # `@recipe` body does not do this — it leaves the `@series` below it
         # live, which used to plot a bar chart of zeros.
         @test nseries(plot(IFEdd.dd().driver)) == 0
+
+        # Beams but no repetition period: nothing to average over, so no chart
+        # rather than a division by zero.
+        timeless = IFEdd.dd()
+        resize!(timeless.driver.beam, 1)
+        timeless.driver.beam[1].energy = 1.0e6
+        @test nseries(plot(timeless.driver)) == 0
     end
 
     @testset "chamber overview" begin

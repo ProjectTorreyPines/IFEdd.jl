@@ -164,25 +164,38 @@ end
 #= ====== =#
 #  driver  #
 #= ====== =#
+"""
+    plot(drv::IFEdd.AbstractIFEDriver)
+
+Driver power flow, wall plug → launched → absorbed, in average megawatts.
+
+`driver.time` spans one repetition period, so shot energy divided by it is the
+average power — the same quantity IFE's extract library reports as
+`P_driver_avg`. Note that `beam.power_launched` is the *in-pulse* trace, whose
+last sample is the zero after the pulse ends; reducing it with `[end]` yields an
+empty chart.
+"""
 @recipe function plot_driver(drv::IFEdd.AbstractIFEDriver)
     # Guard with `if`, never an early `return`: inside a `@recipe` body a bare
     # `return` does not stop the `@series` blocks below it from being emitted,
     # so an empty driver would silently plot a bar chart of zeros.
-    if !isempty(drv.beam)
+    T_rep = (!IMASdd.ismissing(drv, :time) && !isempty(drv.time)) ? drv.time[end] : 0.0
+
+    if !isempty(drv.beam) && T_rep > 0
         P_wall = 0.0
         P_launched = 0.0
         P_absorbed = 0.0
         for beam in drv.beam
-            pl = (!IMASdd.ismissing(beam, :power_launched) && !isempty(beam.power_launched)) ? beam.power_launched[end] : 0.0
+            P = (IMASdd.ismissing(beam, :energy) ? 0.0 : beam.energy) / T_rep
             η_conv = (!IMASdd.ismissing(beam.efficiency, :conversion) && beam.efficiency.conversion > 0) ? beam.efficiency.conversion : 1.0
             η_coup = !IMASdd.ismissing(beam.efficiency, :coupling) ? beam.efficiency.coupling : 1.0
-            P_wall += pl / η_conv
-            P_launched += pl
-            P_absorbed += pl * η_coup
+            P_wall += P / η_conv
+            P_launched += P
+            P_absorbed += P * η_coup
         end
 
         title --> "IFE driver power flow"
-        ylabel --> "Power [MW]"
+        ylabel --> "Average power [MW]"
         legend --> false
         xticks --> (1:3, ["Wall plug", "Launched", "Absorbed"])
         ylim --> (0, max(P_wall, P_launched, P_absorbed) / 1e6 * 1.2)
