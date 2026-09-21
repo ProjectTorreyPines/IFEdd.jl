@@ -18,6 +18,9 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 [extensions]
 IFEddPlotsExt = ["Plots", "IMAS"]
 
+[sources]
+IMASdd = {rev = "master", url = "https://github.com/ProjectTorreyPines/IMASdd.jl.git"}
+
 [compat]
 FileWatching = "1"
 GenerateDD = "1.2.1"
@@ -26,7 +29,7 @@ IMASdd = "8.6.2"
 JSON = "0.21, 1"
 OrderedCollections = "1, 2"
 Plots = "1, 2"
-SHA = "0.7"
+SHA = "0.7, 1"
 julia = "1.11"
 
 [extras]
