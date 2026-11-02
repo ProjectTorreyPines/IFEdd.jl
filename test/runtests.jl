@@ -82,6 +82,24 @@ include("test_plots_ext.jl")              # Plots recipes — must work without 
         @test info.data_type == "STRUCTURE"
     end
 
+    @testset "driver.beam[:].type (laser type)" begin
+        d = IFEdd.dd()
+        resize!(d.driver.beam, 1)
+        beam = d.driver.beam[1]
+
+        # Optional: unset until a code assigns it
+        @test IMASdd.ismissing(beam, :type)
+
+        beam.type = 1
+        @test beam.type === 1
+        @test !IMASdd.ismissing(beam, :type)
+
+        # The enumeration is published through the field's documentation
+        info = IMASdd._all_info[(IFEdd.driver__beam, :type)]
+        @test info.data_type == "INT_0D"
+        @test occursin("KrF", info.documentation)
+    end
+
     @testset "IMASdd machinery compatibility" begin
         d = IFEdd.dd()
 

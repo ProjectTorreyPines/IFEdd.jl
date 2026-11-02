@@ -79,6 +79,7 @@ Because the geometry is spherical rather than toroidal, `start_radius` /
 |---|---|---|
 | `identifier` | | Unique identifier for the beam line |
 | `name` | | Beam line name |
+| `type` | | Laser type code: 0 other/unspecified, 1 KrF excimer, 2 ArF excimer, 3 flashlamp-pumped solid state, 4 diode-pumped solid state |
 | `energy` | J | Energy per pulse delivered to the target |
 | `wavelength` | m | Laser wavelength |
 | `intensity` | W/m² | Peak intensity on target |

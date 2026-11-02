@@ -521,6 +521,7 @@ mutable struct FilledFields____driver__beam <: IMASdd.FilledFields
     var"power_launched_σ"::Bool
     var"pulse_length"::Bool
     var"pulse_length_σ"::Bool
+    var"type"::Bool
     var"wavelength"::Bool
     var"wavelength_σ"::Bool
 end
@@ -537,6 +538,7 @@ mutable struct driver__beam{T} <: IMASdd.IDSvectorStaticElement{T}
     var"power_launched_σ" :: Vector{T}
     var"pulse_length" :: T
     var"pulse_length_σ" :: T
+    var"type" :: Int
     var"wavelength" :: T
     var"wavelength_σ" :: T
     _name::Symbol
@@ -548,7 +550,7 @@ mutable struct driver__beam{T} <: IMASdd.IDSvectorStaticElement{T}
 end
 
 function driver__beam{T}(; frozen::Bool=false) where T
-    ids = driver__beam{T}(my_efficiency{T}(;frozen), 0.0, 0.0, "", 0.0, 0.0, "", T[], T[], 0.0, 0.0, 0.0, 0.0, Symbol("beam"), FilledFields____driver__beam(false, false, false, false, false, false, false, false, false, false, false, false, false), frozen, ReentrantLock(), IMASdd.ThreadSafeDicts.ThreadSafeDict{Int,Vector{Symbol}}(), WeakRef(nothing))
+    ids = driver__beam{T}(my_efficiency{T}(;frozen), 0.0, 0.0, "", 0.0, 0.0, "", T[], T[], 0.0, 0.0, 0, 0.0, 0.0, Symbol("beam"), FilledFields____driver__beam(false, false, false, false, false, false, false, false, false, false, false, false, false, false), frozen, ReentrantLock(), IMASdd.ThreadSafeDicts.ThreadSafeDict{Int,Vector{Symbol}}(), WeakRef(nothing))
     setfield!(ids.efficiency, :_parent, WeakRef(ids))
     return ids
 end

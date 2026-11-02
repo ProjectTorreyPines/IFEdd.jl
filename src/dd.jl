@@ -171,6 +171,7 @@ function __init__()
 (driver__beam, :power_launched_σ) => IMASdd.Info(["driver.time"], "W", "FLT_1D", "error of driver.beam[:].power_launched", true, String[]),
 (driver__beam, :pulse_length) => IMASdd.Info(String[], "s", "FLT_0D", "Duration of a single pulse", true, String[]),
 (driver__beam, :pulse_length_σ) => IMASdd.Info(String[], "s", "FLT_0D", "error of driver.beam[:].pulse_length", true, String[]),
+(driver__beam, :type) => IMASdd.Info(String[], "-", "INT_0D", "Laser type code\n0) other/unspecified\n1) KrF excimer\n2) ArF excimer\n3) flashlamp-pumped solid state\n4) diode-pumped solid state", true, String[]),
 (driver__beam, :wavelength) => IMASdd.Info(String[], "m", "FLT_0D", "Laser wavelength", true, String[]),
 (driver__beam, :wavelength_σ) => IMASdd.Info(String[], "m", "FLT_0D", "error of driver.beam[:].wavelength", true, String[]),
 (driver, :code) => IMASdd.Info(String[], "-", "STRUCTURE", "Generic decription of the code-specific parameters for the code that has produced this IDS", true, String[]),

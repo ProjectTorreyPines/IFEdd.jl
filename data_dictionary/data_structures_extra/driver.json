@@ -66,6 +66,11 @@
   "type": "static",
   "units": "s"
  },
+ "driver.beam[:].type": {
+  "data_type": "INT_0D",
+  "documentation": "Laser type code\n0) other/unspecified\n1) KrF excimer\n2) ArF excimer\n3) flashlamp-pumped solid state\n4) diode-pumped solid state",
+  "type": "static"
+ },
  "driver.beam[:].wavelength": {
   "data_type": "FLT_0D",
   "documentation": "Laser wavelength",
