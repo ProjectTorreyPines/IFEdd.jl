@@ -8,7 +8,9 @@ IFEdd = "b7ef78e8-7dbb-4c2e-aaed-bb48b048103f"
 IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
 
 [extras]
+GenerateDD = "c9827a86-0873-413c-b74b-de8fe857399a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
+build = ["GenerateDD"]
 test = ["Test"]

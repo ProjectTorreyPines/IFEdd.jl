@@ -41,6 +41,7 @@ end
 
 | Reason | Cause | Fix |
 |---|---|---|
+| `:generatedd_not_loaded` | GenerateDD is not loaded, so the generator cannot emit code | `Pkg.add("GenerateDD")` if needed, then `using GenerateDD` |
 | `:ifedd_not_locatable` | `pkgdir(IFEdd)` returned `nothing` — a sysimage or relocated install | Pass `ifedd_default_schema_dir` and `ifedd_abstracts_file` explicitly |
 | `:parent_schema_missing` | A substituted parent IDS schema is missing from the IFEdd install | As above |
 | `:output_dir_readonly` | `output_dir` is not writable | Fix permissions, or choose another directory |

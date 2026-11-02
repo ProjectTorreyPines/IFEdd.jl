@@ -33,7 +33,7 @@ After changing `my_summary.json` or pulling an IFEdd update that mutates
 `abstracts.json`, regenerate from the IFEdd repo root:
 
 ```bash
-julia --project test/fixtures/regen_fixture.jl
+julia --project=scripts test/fixtures/regen_fixture.jl
 git add test/fixtures/MyIFEProject/src/
 git commit
 ```

@@ -36,7 +36,7 @@ this one exercises the substitution graph and the regex rewriter end to end.
 After changing schemas, IFEdd's `abstracts.json`, or `generate_user_dd`:
 
 ```bash
-julia --project test/fixtures/regenerate_subids_fixture.jl
+julia --project=scripts test/fixtures/regenerate_subids_fixture.jl
 git add test/fixtures/MyIFEProject_subids/src/
 git commit
 ```

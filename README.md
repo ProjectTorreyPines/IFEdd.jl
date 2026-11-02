@@ -31,7 +31,8 @@ dd.summary.target.gain = 85.0
 
 - **Customizable containers.** `IFEdd.generate_user_dd` bakes a variant for a downstream
   package, substituting user-supplied IDSs at any depth while keeping the abstract
-  hierarchy intact.
+  hierarchy intact. This is the one feature that needs the optional GenerateDD package
+  (`using IFEdd, GenerateDD`), whose repository is private.
 
 ## Documentation
 

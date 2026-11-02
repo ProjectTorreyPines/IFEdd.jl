@@ -1,4 +1,4 @@
-using Documenter, IFEdd
+using Documenter, IFEdd, GenerateDD
 
 makedocs(;
     modules=[IFEdd],

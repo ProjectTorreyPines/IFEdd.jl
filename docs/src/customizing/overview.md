@@ -12,6 +12,12 @@ whichever parent IDSs needed to change to accommodate it.
 Substituted types keep their place in the [abstract lattice](../concepts/abstracts.md),
 so code written against `IFEdd.AbstractIFE*` continues to dispatch correctly on them.
 
+!!! note "Baking needs GenerateDD"
+    `generate_user_dd` and `@bake_dd` emit code through GenerateDD, an optional
+    dependency that plain IFEdd users never install. Add it to your environment with
+    `Pkg.add("GenerateDD")` and load it next to IFEdd: `using IFEdd, GenerateDD`. Its
+    repository is private, so this requires access to it.
+
 !!! note "IFEdd's own container never changes"
     Substitution is per-bake. `IFEdd.dd()` always embeds IFEdd's defaults, and several
     packages with different customizations coexist in one session without interfering.

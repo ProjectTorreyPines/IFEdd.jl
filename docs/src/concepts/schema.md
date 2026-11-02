@@ -94,6 +94,7 @@ The schemas live in `data_dictionary/data_structures_extra/` as one JSON file pe
 IDS, in the same format IMASdd uses. The Julia types in `src/dd_idstypes.jl` and
 `src/dd.jl` are generated from them and committed; they are never edited by hand.
 
-To change the schema, edit the JSON and regenerate. The same generator is exposed
+To change the schema, edit the JSON and regenerate with
+`julia --project=scripts scripts/generate.jl`. The same generator is exposed
 publicly as [`IFEdd.generate_user_dd`](@ref) so that downstream packages can bake
 their own variant — see [Customizing the container](../customizing/overview.md).

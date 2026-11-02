@@ -103,7 +103,7 @@ dotted form instead, without the `[:]`:
 ## Baking
 
 ```@example sub
-using IFEdd
+using IFEdd, GenerateDD
 
 IFEdd.@bake_dd MyDD = (
     schema_dir    = schema_dir,

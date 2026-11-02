@@ -12,7 +12,7 @@ using JSON
 # AbstractIFE* lattice end-to-end. `test_user_dd_emit.jl`
 # carries the unit-level correctness; this file is the **regression
 # layer**: any PR that changes the generator or `abstracts.json` must
-# also `julia --project test/fixtures/regen_fixture.jl` and commit
+# also `julia --project=scripts test/fixtures/regen_fixture.jl` and commit
 # the diff.
 
 const FIXTURE_ROOT = joinpath(@__DIR__, "fixtures", "MyIFEProject")
@@ -58,7 +58,7 @@ const FIXTURE_SRC = joinpath(FIXTURE_ROOT, "src")
                 differs from the live `IFEdd.generate_user_dd` output.
 
                 To fix:
-                    julia --project test/fixtures/regen_fixture.jl
+                    julia --project=scripts test/fixtures/regen_fixture.jl
                     git add test/fixtures/MyIFEProject/src/
                     git commit
                 """

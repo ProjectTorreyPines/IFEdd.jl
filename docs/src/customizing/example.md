@@ -11,7 +11,7 @@ examples/custom_build_layer/
 ```
 
 ```bash
-julia --project=. examples/custom_build_layer/run.jl
+julia --project=scripts examples/custom_build_layer/run.jl
 ```
 
 It substitutes a custom chamber layer — IFEdd's own `build.layer`, extended with a
@@ -42,7 +42,7 @@ of it — the two share a dispatch surface, not a layout. Every field you want m
 in your JSON:
 
 ```@example example
-using IFEdd
+using IFEdd, GenerateDD
 
 schema_dir = joinpath(pkgdir(IFEdd), "examples", "custom_build_layer",
                       "data_dictionary", "data_structures_extra")

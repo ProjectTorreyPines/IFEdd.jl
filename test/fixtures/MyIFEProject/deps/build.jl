@@ -6,7 +6,7 @@
 # should copy into their own `deps/build.jl`. See
 # the package README for narrative.
 
-using IFEdd
+using IFEdd, GenerateDD
 
 const PROJECT_ROOT = normpath(joinpath(@__DIR__, ".."))
 const SCHEMA_DIR   = joinpath(PROJECT_ROOT, "data_dictionary",

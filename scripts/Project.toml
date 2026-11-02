@@ -1,0 +1,11 @@
+# Environment for the maintainer scripts that regenerate code with GenerateDD:
+# `scripts/generate.jl`, the fixture regenerators and the custom-layer example.
+# GenerateDD is only a weak dependency of IFEdd, so `--project=.` cannot load it.
+[deps]
+GenerateDD = "c9827a86-0873-413c-b74b-de8fe857399a"
+IFEdd = "b7ef78e8-7dbb-4c2e-aaed-bb48b048103f"
+IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+
+[sources]
+IFEdd = {path = ".."}

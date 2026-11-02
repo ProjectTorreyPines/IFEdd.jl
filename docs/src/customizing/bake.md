@@ -44,7 +44,7 @@ IFEdd default.
 ## Bake it
 
 ```@example bake
-using IFEdd
+using IFEdd, GenerateDD
 
 IFEdd.@bake_dd dd_mine = (
     schema_dir    = schema_dir,
@@ -74,11 +74,15 @@ described in [Substituting sub-IDSs](substitution.md).
 ## Persisting the generated source
 
 Pass `output_dir` and the emitted files are written there instead of a temporary
-directory. That makes the macro usable inside a package module:
+directory. That makes the macro usable inside a package module. The module must opt out of
+precompilation, because GenerateDD cannot run during it, and it must list GenerateDD
+in its `[deps]`, so everyone installing that package needs access to it. For anything
+you distribute, prefer the [package recipe](package.md):
 
 ```julia
+__precompile__(false)
 module MyPkg
-    using IFEdd
+    using IFEdd, GenerateDD
     IFEdd.@bake_dd Custom = (
         schema_dir    = joinpath(@__DIR__, "schemas"),
         output_dir    = joinpath(@__DIR__, "gen"),

@@ -1,13 +1,13 @@
 # Substituting a custom chamber layer into the IFE build.
 #
-#     julia --project=. examples/custom_build_layer/run.jl
+#     julia --project=scripts examples/custom_build_layer/run.jl
 #
 # `data_dictionary/data_structures_extra/my_layer.json` is IFEdd's own
 # `build.layer` schema, copied verbatim and extended with one field
 # (`cost_rate`). The copy is the point: a substituted type inherits nothing,
 # so whatever the schema does not list simply does not exist.
 
-using IFEdd
+using IFEdd, GenerateDD
 
 const SCHEMA_DIR = joinpath(@__DIR__, "data_dictionary", "data_structures_extra")
 

@@ -1,13 +1,13 @@
 # Regenerate the in-tree MyIFEProject fixture's generated files. Run from
 # the IFEdd repo root:
 #
-#     julia --project test/fixtures/regen_fixture.jl
+#     julia --project=scripts test/fixtures/regen_fixture.jl
 #
 # Commit the diff in `test/fixtures/MyIFEProject/src/` afterwards. The
 # fixture freshness test (`test/test_user_dd_fixture.jl`)
 # enforces that committed files match the live generator output.
 
-using IFEdd
+using IFEdd, GenerateDD
 
 const FIXTURE_ROOT = joinpath(@__DIR__, "MyIFEProject")
 const SCHEMA_DIR   = joinpath(FIXTURE_ROOT, "data_dictionary",

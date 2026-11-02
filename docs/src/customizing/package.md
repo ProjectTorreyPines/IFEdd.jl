@@ -23,11 +23,22 @@ IFEdd  = "b7ef78e8-7dbb-4c2e-aaed-bb48b048103f"
 IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
 
 [extras]
+GenerateDD = "c9827a86-0873-413c-b74b-de8fe857399a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+build = ["GenerateDD"]
+test = ["GenerateDD", "Test"]
 ```
+
+GenerateDD is only needed to regenerate the code, not to run it, so it goes under the
+`build` and `test` targets instead of `[deps]`.
+
+!!! warning "Installing a package with `deps/build.jl` runs it"
+    `Pkg.add("MyPkg")` runs the build script too, so anyone installing `MyPkg` would
+    need access to GenerateDD's private repository. If `MyPkg` is meant for wider use,
+    move the script out of `deps/` and run it by hand: the generated files are
+    committed, so installs do not need it.
 
 ## 2. Schema
 
@@ -73,7 +84,7 @@ It is rejected on leaf scalars and on `time`.
 ## 3. `deps/build.jl`
 
 ```julia
-using IFEdd
+using IFEdd, GenerateDD
 
 const PROJECT_ROOT = normpath(joinpath(@__DIR__, ".."))
 
@@ -139,7 +150,7 @@ abstracts accepts `MyPkg.dd` without modification.
 Assert that the committed artifacts still match what the generator produces:
 
 ```julia
-using Test, IFEdd
+using Test, IFEdd, GenerateDD
 
 mktempdir() do tmp
     IFEdd.generate_user_dd(

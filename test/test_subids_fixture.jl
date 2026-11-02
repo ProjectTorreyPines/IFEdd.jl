@@ -53,7 +53,7 @@ const SUBIDS_FIXTURE_SRC = joinpath(SUBIDS_FIXTURE_ROOT, "src")
                 differs from the live `IFEdd.generate_user_dd` output.
 
                 To fix:
-                    julia --project test/fixtures/regenerate_subids_fixture.jl
+                    julia --project=scripts test/fixtures/regenerate_subids_fixture.jl
                     git add test/fixtures/MyIFEProject_subids/src/
                     git commit
                 """

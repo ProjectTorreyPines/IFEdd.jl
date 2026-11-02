@@ -2,6 +2,7 @@ using Test
 using IFEdd
 using IMASdd
 using HelpPlots
+using GenerateDD  # activates the extension behind generate_user_dd
 
 include("test_abstracts_derive.jl")    # abstracts.json drift — runs FIRST
 include("test_abstracts.jl")
@@ -80,6 +81,25 @@ include("test_plots_ext.jl")              # Plots recipes — must work without 
         info = IMASdd._all_info[(IFEdd.dd, :summary)]
         @test info isa IMASdd.Info
         @test info.data_type == "STRUCTURE"
+    end
+
+    @testset "GenerateDD stays optional" begin
+        # A hard dependency would make IFEdd uninstallable without access to
+        # GenerateDD's private repository.
+        project = read(joinpath(pkgdir(IFEdd), "Project.toml"), String)
+        deps = match(r"\[deps\]\n(.*?)\n\n"s, project).captures[1]
+        @test !occursin("GenerateDD", deps)
+
+        @test Base.get_extension(IFEdd, :IFEddGenerateDDExt) !== nothing
+        @test IFEdd._require_generatedd() === nothing
+        err = try
+            IFEdd._require_generatedd(nothing)
+        catch e
+            e
+        end
+        @test err isa IFEdd.GeneratorError
+        @test err.reason === :generatedd_not_loaded
+        @test occursin("using GenerateDD", sprint(showerror, err))
     end
 
     @testset "driver.beam[:].type (laser type)" begin

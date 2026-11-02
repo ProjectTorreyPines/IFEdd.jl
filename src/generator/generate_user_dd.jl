@@ -9,7 +9,28 @@
 #   - cross-package `_all_info` registration inside the user module's
 #     `__init__`, with a content-hash version-skew warning.
 
-import GenerateDD
+"""
+    IFEdd._emit_raw_structs(workdir, names) -> String
+
+Raw struct emission for the IDS `names` found in `workdir`. Implemented by the
+`IFEddGenerateDDExt` extension; has no methods until GenerateDD is loaded.
+"""
+function _emit_raw_structs end
+
+"""
+    IFEdd._require_generatedd(ext=Base.get_extension(IFEdd, :IFEddGenerateDDExt))
+
+Raise `GeneratorError(:generatedd_not_loaded, …)` unless the GenerateDD extension
+is active, so a missing dependency fails before any file is written.
+"""
+function _require_generatedd(ext=Base.get_extension(@__MODULE__, :IFEddGenerateDDExt))
+    ext === nothing && throw(GeneratorError(:generatedd_not_loaded,
+        "generate_user_dd and @bake_dd need GenerateDD, an optional dependency of " *
+        "IFEdd. Run `using GenerateDD` first, after `Pkg.add(\"GenerateDD\")` if it " *
+        "is not in your environment (its repository is private, so this requires " *
+        "access to it)."))
+    return nothing
+end
 
 const _DEFAULT_SLOTS = ["balance_of_plant", "blanket", "build", "core_profiles",
                        "core_sources", "costing", "driver", "neutronics",
@@ -61,8 +82,10 @@ This emits three files into `output_dir`:
   concretes' `_all_info` entries.
 - `MyIFEProject_dd_manifest.json` — provenance/hashes for freshness CI.
 
+Requires GenerateDD to be loaded (`using IFEdd, GenerateDD`).
+
 Errors are raised as `IFEdd.GeneratorError(reason::Symbol, detail)`:
-`:ifedd_not_locatable`, `:schema_dir_missing`, `:subdir_in_schema_dir`,
+`:generatedd_not_loaded`, `:ifedd_not_locatable`, `:schema_dir_missing`, `:subdir_in_schema_dir`,
 `:malformed_json`, `:bad_supertype`, `:supertype_mismatch`,
 `:concrete_not_in_schemas`, `:ambiguous_binding`,
 `:user_name_shadows_ifedd_default`, `:output_dir_readonly`,
@@ -78,6 +101,8 @@ function generate_user_dd(; output_dir::AbstractString,
                             ifedd_default_schema_dir::Union{AbstractString,Nothing} = nothing,
                             ifedd_abstracts_file::Union{AbstractString,Nothing} = nothing,
                             verbose::Bool = false)
+    _require_generatedd()
+
     # 1. Resolve IFEdd-side defaults
     ifedd_root = _force_pkgdir_ifedd()
     if ifedd_abstracts_file === nothing || ifedd_default_schema_dir === nothing
@@ -386,13 +411,8 @@ function _emit_user_idstypes(schema_extra_dir, user_schemas,
                                                defaults_dir, user_schemas)
         end
 
-        desired = String[]
-        for name in user_concrete_names
-            append!(desired, keys(GenerateDD.imas_dd_ids(workdir, name)))
-        end
-        sort!(unique!(desired))
-
-        raw = join(GenerateDD.imas_julia_struct(workdir, desired), "\n")
+        # `invokelatest`: the extension may have loaded after this was compiled.
+        raw = Base.invokelatest(_emit_raw_structs, workdir, user_concrete_names)
         content, all_info_entries = _postprocess_user_idstypes(raw, user_concrete_names)
 
         # GenerateDD emits a spurious empty-fields root struct for each user
@@ -962,8 +982,9 @@ true
 
 Inside a package module — persistent (source emitted into `output_dir`):
 ```julia
+__precompile__(false)  # GenerateDD cannot run during precompilation
 module MyPkg
-    using IFEdd
+    using IFEdd, GenerateDD
     IFEdd.@bake_dd Custom = (
         schema_dir    = joinpath(@__DIR__, "schemas"),
         output_dir    = joinpath(@__DIR__, "gen"),
